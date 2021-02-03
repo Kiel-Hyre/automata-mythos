@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'rest_framework_tracking',
     'backend.base',
     # ADD backend.apps.* LIBRARIES BELOW
+    'backend.apps.lexxer',
 ]
 
 MIDDLEWARE = [
