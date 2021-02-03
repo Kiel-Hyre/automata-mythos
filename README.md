@@ -28,6 +28,7 @@ the course Automata of CS in PLM
 ```
     rm -rf venv
 ```
+5. Something something
 Check this [info](https://www.liquidweb.com/kb/how-to-setup-a-python-virtual-environment-on-windows-10/)
 for windows
 
