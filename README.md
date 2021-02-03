@@ -19,6 +19,7 @@ the course Automata of CS in PLM
 2. Activate the environment
 ```
     source venv/bin/activate  #Ubuntu
+    venv/Scripts/active #Windows
 ```
 3. Deactivate enviroment
 ```
