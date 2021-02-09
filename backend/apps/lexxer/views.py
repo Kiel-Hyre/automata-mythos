@@ -1,7 +1,7 @@
 import json
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import serializers
+from rest_framework import serializers, status
 
 from django.shortcuts import render
 
@@ -36,8 +36,10 @@ class LexxerExecuteView(APIView):
         try:
             data = lex_execute(data['raw_data'])
         except Exception as e:
-            return Response({ 'errors': str(e) })
+            return Response({'errors': str(e)},
+                status=status.HTTP_400_BAD_REQUEST)
 
         return Response(
-                {'lexxer': self.OutputSerializer(data, many=True).data}
+                {'lexxer': self.OutputSerializer(data, many=True).data,
+                },  status=status.HTTP_200_OK
             )
