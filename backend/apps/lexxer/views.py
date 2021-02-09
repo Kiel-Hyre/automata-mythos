@@ -21,6 +21,13 @@ class LexxerExecuteView(APIView):
             except:
                 raise serializers.ValidationError('Failed to load')
 
+    class OutputSerializer(serializers.Serializer):
+        value = serializers.CharField()
+        title = serializers.CharField()
+        description = serializers.CharField()
+        line = serializers.IntegerField()
+
+
     def post(self, request, *args, **kwargs):
         serializer = self.InputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -28,5 +35,5 @@ class LexxerExecuteView(APIView):
         data = lex_execute(data['raw_data'])
 
         return Response(
-                {'hello': data}
+                {'lexxer': self.OutputSerializer(data, many=True).data}
             )

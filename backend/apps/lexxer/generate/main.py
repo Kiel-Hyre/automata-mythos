@@ -11,12 +11,21 @@ class Token:
         self.line = ln
         self.type = None
 
+
+    def val_to_dict(self):
+        return {
+            'value': self.value,
+            'title': self.title,
+            'description': self.description,
+            'line': self.line
+        }
+
     def __repr__(self):
         return f"""
         title: {self.title} value: {self.value} line: {self.line} desc: {self.description}"""
 
     def __str__(self):
-        return self.value, self.line
+        return self.value
 
 
 class ReservedWordToken(Token):
@@ -25,18 +34,124 @@ class ReservedWordToken(Token):
 class ReservedSymbolToken(Token):
     description = 'reserved-symbols'
 
-class TextLiteralToken(Token):
-    description = 'text-literal'
+class LogicalOPToken(Token):
+    description = 'logical-op'
+
+class UnaryLogicalOPToken(Token):
+    description = 'unary-logical-op'
 
 class CommentToken(Token):
     description = 'comment'
 
+class TextLiteralToken(Token):
+    description = 'text-literal'
+
+
+
+class AndToken(LogicalOPToken):
+    title = 'and'
+
+class BestowToken(ReservedWordToken):
+    title = 'bestow'
+
+class BlessedToken(ReservedWordToken):
+    title = 'blessed'
+
+class ChestToken(ReservedWordToken):
+    title = 'chest'
+
+class ChopToken(ReservedWordToken):
+    title = 'chop'
+
+class ChronoToken(ReservedWordToken):
+    title = 'chrono'
+
+class CursedToken(ReservedWordToken):
+    title = 'cursed'
+
+class DayToken(ReservedWordToken):
+    title = 'day'
+
+class EchoToken(ReservedWordToken):
+    title = 'ouput-call'
+
+class FateToken(ReservedWordToken):
+    title = 'fate'
+
+class FutureToken(ReservedWordToken):
+    title = 'future'
+
+class GoldToken(ReservedWordToken):
+    title = 'gold'
+
+class HeadToken(ReservedWordToken):
+    title = 'head'
+
+class HermesToken(ReservedWordToken):
+    title = 'hermes'
+
+class HydraToken(ReservedWordToken):
+    title = 'hydra'
+
+class InToken(ReservedWordToken):
+    title = 'in'
+
+class NoneToken(ReservedWordToken):
+    title = 'none'
+
+class NotToken(LogicalOPToken):
+    title = 'not'
+
+class OfferToken(ReservedWordToken):
+    title = 'offer'
 
 class OlympusToken(ReservedWordToken):
     title = 'olympus'
 
-class EchoColumnToken(ReservedWordToken):
-    title = 'ouput-call'
+class OrToken(LogicalOPToken):
+    title = 'or'
+
+class PandoraToken(ReservedWordToken):
+    title = 'pandora'
+
+class PastToken(ReservedWordToken):
+    title = 'past'
+
+class ProphecyToken(ReservedWordToken):
+    title = 'prohecy'
+
+class QuestToken(ReservedWordToken):
+    title = 'quest'
+
+class RetrialToken(ReservedWordToken):
+    title = 'retrial'
+
+class RewardToken(ReservedWordToken):
+    title = 'reward'
+
+class SilverToken(ReservedWordToken):
+    title = 'SilverToken'
+
+class SkipToken(ReservedWordToken):
+    title = 'skip'
+
+class SlainToken(ReservedWordToken):
+    title = 'slain'
+
+class SongToken(ReservedWordToken):
+    title = 'song'
+
+class StopToken(ReservedWordToken):
+    title = 'stop'
+
+class TrialToken(ReservedWordToken):
+    title = 'trial'
+
+class VerdictToken(ReservedWordToken):
+    title = 'verdict'
+
+
+# reserved symbols
 
 class OpeningColumnToken(ReservedSymbolToken):
     title = 'opening-column'
@@ -54,11 +169,47 @@ class TerminatorToken(ReservedSymbolToken):
     title = 'terminator'
 
 
+
 TOKEN_DICT = {
-    'OLYMPUS': OlympusToken,
+    # logical-op
+    'AND': AndToken,
+    "BESTOW": BestowToken,
+    "BLESSED": BlessedToken,
+    "CHEST": ChestToken,
+    "CHOP": ChopToken,
+    "CHRONO": ChronoToken,
+    "CURSED": CursedToken,
+    "DAY": DayToken,
+    "ECHO": EchoToken,
+    "FATE": FateToken,
+    "FUTURE": FutureToken,
+    "GOLD": GoldToken,
+    "HEAD": HeadToken,
+    "HERMES": HermesToken,
+    "HYDRA": HydraToken,
+    "IN": InToken,
+    "NONE": NoneToken,
+    "NOT": NotToken,
+    "OFFER": OfferToken,
+    "OLYMPUS": OlympusToken,
+    "OR": OrToken,
+    "PANDORA": PandoraToken,
+    "PAST": PastToken,
+    "PROPHECY": ProphecyToken,
+    "QUEST": QuestToken,
+    "RETRIAL": RetrialToken,
+    "REWARD": RewardToken,
+    "SILVER": SilverToken,
+    "SKIP": SkipToken,
+    "SLAIN": SlainToken,
+    "SONG": SongToken,
+    "STOP": StopToken,
+    "TRIAL": TrialToken,
+    "VERDICT": VerdictToken,
+
     '|<|': OpeningColumnToken,
     '|>|': CloseColumnToken,
-    'ECHO': EchoColumnToken,
+
     '(': OpenParenthesisToken,
     ')': CloseParenthesisToken,
     'TEXT-LIT': TextLiteralToken,
@@ -109,16 +260,23 @@ def lex_execute(string_arr=[]):
                     if _index == 0: continue
                     elif _char == '"': break
 
+
                 if _text[-1] != '"': raise Exception(
                     f'Not ending in quotation mark line: {line}'
                 )
-                tokenize_arr.append( # BOGGED pa pano pag wla tlga end quote
+                tokenize_arr.append(
                     text_to_token(text=_text, line=line, type_lit='TEXT-LIT'))
 
-                # if index == 5: raise Exception(char, _text, _index)
-
-
                 index, text= index + _index + 1, ""
+
+            # comment?
+            elif text == "??":
+                tokenize_arr.append(text_to_token(
+                    string_strip[string_strip.find(text)::],
+                    index,
+                    type_lit='#')
+                )
+                break
 
             elif char == ' ':
                 if text: tokenize_arr.append(text_to_token(text, index))
@@ -128,97 +286,6 @@ def lex_execute(string_arr=[]):
                 text, index = text + char, index + 1
             tokenize_arr = list(filter(None, tokenize_arr)) # non-efficient, use for NONE error in ( )
 
-    #return list(map(lambda x: x.value, tokenize_arr))
-    raise Exception(tokenize_arr)
-
-            # comments
-
-            # special cases of columns
-            # operators
-
-            # single delims here?
-            # if char in ['(', ')']:
-            #     if tokenize_arr[-1] != text: # not yet already
-            #         tokenize_arr.append(text_to_token(text, line)) # ECHO
-            #     tokenize_arr.append(text_to_token(i, line)) # (
-            #     text = ""
-            #     continue
-
-
-
-
-
-
-        # for index in range(len(string_strip)):
-        #     char = string_strip[index] # due to the bug, enumerate does not change val
-
-        #     # print(char, text)
-
-        #     if char == '"':
-        #         replace = string_strip[index::]
-        #         _text = ""
-
-        #         for _index, _char in enumerate(replace):
-        #             _text += _char
-        #             if _index == 0: continue
-        #             elif _char == 0: break
-        #         tokenize_arr.append(
-        #             text_to_token(text=_text, line=line, type_lit='TEXT-LIT'))
-        #         index, text= _index+1, ""
-
-        #         print(index)
-        #         continue
-
-        #     if char == '$':
-        #         if text:
-        #             raise Exception(text)
-        #             tokenize_arr.append(text_to_token(text, index))
-        #         text = ""
-        #         continue
-
-
-
-        # for index, char in enumerate(string_strip):
-        #     print(index, char, string_strip, text)
-        #     if char == '"':
-        #         replace = string_strip[index::] # from current to last
-        #         _text = ""
-
-        #         for _index, _char in enumerate(replace):
-        #             _text += _char
-        #             if _index == 0: continue
-        #             elif _char == 0: break
-
-        #         tokenize_arr.append(text_to_token(text=_text, line=line, type_lit='TEXT-LIT'))
-        #         string_strip = replace[_index+1::]
-        #         continue
-
-
-
-            # if str_main == ' ': # basic delim
-            #     if text:
-            #         raise Exception(text)
-            #         tokenize_arr.append(text_to_token(text, index))
-            #     text = ""
-            #     continue
-
-
-
-        #     # comment?
-        #     # if text == "??":
-        #     #     tokenize_arr.append(text_to_token(
-        #     #         string_strip[string_strip.find(text)::],
-        #     #         index,
-        #     #         type_lit='#')
-        #     #     )
-        #     #     break
-
-        #     # single delims here?
-        #     if i in ['(', ')', ';']:
-        #         if tokenize_arr[-1] != text: # not yet already
-        #             tokenize_arr.append(text_to_token(text, index)) # ECHO
-        #         tokenize_arr.append(text_to_token(i, index)) # (
-        #         text = ""
-        #         continue
-
+    return list(map(lambda x: x.val_to_dict(), tokenize_arr))
+    # raise Exception(tokenize_arr)
 
