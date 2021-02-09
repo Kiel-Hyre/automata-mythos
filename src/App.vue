@@ -1,15 +1,15 @@
 <template>
-  <div>
-    <v-app>
-      <v-container>
-        <div class="my-10">
-          <v-img
-            :src="require('@/assets/mythos.png')"
-            class="mx-auto"
-            width="300"
-          />
-        </div>
-        <div>
+  <v-app>
+    <v-container>
+      <div class="my-10">
+        <v-img
+          :src="require('@/assets/mythos.png')"
+          class="mx-auto"
+          width="300"
+        />
+      </div>
+      <v-row>
+        <v-col cols="7">
           <div>
             <div class="mt-10 mb-5">
               <span
@@ -18,16 +18,13 @@
               >
             </div>
             <v-sheet color="#2d2d2d" class="py-3">
-              <prism-editor
+              <codemirror
                 v-model="code"
-                cols="5"
-                :highlight="highlight"
-                class="my-editor px-3"
-                line-numbers
-                @keyup.alt.83="saveChanges"
-                @keyup.alt.82="execute"
-                @keydown="smartTyper"
-              ></prism-editor>
+                @keydown.ctrl.83.prevent="saveChanges"
+                @keydown.ctrl.82.prevent="execute"
+                :options="cmOptions"
+                placeholder="Write your own story ..."
+              />
             </v-sheet>
 
             <v-btn @click="execute" class="success text-none mt-10" large>
@@ -47,8 +44,12 @@
               />
             </div>
           </div>
-
-          <v-simple-table height="500">
+        </v-col>
+        <v-col>
+          <v-alert v-if="lexicalErrors.length" type="error">
+            {{ lexicalErrors[0] }}
+          </v-alert>
+          <v-simple-table v-else height="500">
             <template v-slot:default>
               <thead>
                 <tr>
@@ -70,24 +71,39 @@
               </tbody>
             </template>
           </v-simple-table>
-        </div>
-        <v-snackbar v-model="saved" timeout="3000" top right close
-          >Saved</v-snackbar
-        >
-      </v-container>
-    </v-app>
-  </div>
+        </v-col>
+      </v-row>
+      <v-snackbar v-model="saved" timeout="3000" top right close
+        >Saved</v-snackbar
+      >
+    </v-container>
+  </v-app>
 </template>
 
 <script>
-import { PrismEditor } from "vue-prism-editor";
-import "vue-prism-editor/dist/prismeditor.min.css"; // import the styles somewhere
+import { codemirror } from "vue-codemirror";
+import "codemirror/lib/codemirror.css";
+import "codemirror/theme/monokai.css";
+import "codemirror/addon/display/fullscreen.css";
+import "codemirror/addon/scroll/simplescrollbars.css";
+
+import "codemirror/addon/edit/matchbrackets";
+import "codemirror/addon/edit/closebrackets";
+import "codemirror/addon/selection/active-line";
+import "codemirror/addon/display/fullscreen";
+import "codemirror/addon/search/searchcursor";
+import "codemirror/addon/search/search";
+import "codemirror/addon/scroll/simplescrollbars";
+import "codemirror/addon/display/placeholder";
+
+// import "codemirror/addon/";
 
 export default {
   components: {
-    PrismEditor
+    codemirror
   },
   data() {
+    const self = this;
     return {
       code: "",
       stringifyCode: "",
@@ -99,7 +115,34 @@ export default {
         { text: "Token", value: "title" },
         { text: "Description", value: "description" },
         { text: "Ln", value: "line" }
-      ]
+      ],
+      lexicalErrors: [],
+      cmOptions: {
+        tabSize: 2,
+        theme: "monokai",
+        lineNumbers: true,
+        line: true,
+        autofocus: true,
+        lineWiseCopyCut: true,
+        autoCloseBrackets: true,
+        matchBrackets: true,
+        styleActiveLine: true,
+        scrollbarStyle: "overlay",
+        extraKeys: {
+          F11: function(cm) {
+            cm.setOption("fullScreen", !cm.getOption("fullScreen"));
+          },
+          Esc: function(cm) {
+            if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false);
+          },
+          "Ctrl-S": function() {
+            self.saveChanges();
+          },
+          "Ctrl-R": function(cm) {
+            self.execute();
+          }
+        }
+      }
     };
   },
   methods: {
@@ -117,72 +160,32 @@ export default {
 
       this.loading = true;
 
-      const { data = [] } = await this.axios.post(
+      const response = await this.axios.post(
         "http://localhost:8000/lexxer/execute/",
         {
           raw_data
         }
       );
 
-      console.log(data);
+      const { success, data = [], errors = [] } = response["data"];
 
-      this.lexicalData = [...data.lexxer];
-
-      this.stringifyCode = raw_data;
       this.loading = false;
-    },
-    smartTyper(event) {
-      const pairs = {
-        '"': '"',
-        "(": ")",
-        "{": "}",
-        "|": "|>|"
-      };
 
-      const keyTyped = event.key;
-      const inputElement = event.target;
-
-      if (
-        !Object.keys(pairs).includes(keyTyped) ||
-        document.getSelection().toString()
-      ) {
-        return;
-      }
-
-      let cursorPos = inputElement.selectionStart;
-      let closingChar = pairs[keyTyped];
-
-      if (
-        (keyTyped === "|" && this.code[cursorPos - 1] === "<") ||
-        keyTyped !== "|"
-      ) {
-        inputElement.value =
-          inputElement.value.substr(0, cursorPos) +
-          closingChar +
-          inputElement.value.substr(cursorPos);
-
-        inputElement.setSelectionRange(cursorPos, cursorPos);
-      }
+      if (success) {
+        this.stringifyCode = raw_data;
+        this.lexicalData = [...data];
+        this.lexicalErrors = [];
+      } else this.lexicalErrors = [...errors];
     }
   },
+
   created() {
-    this.code = localStorage.getItem("code");
+    this.code = localStorage.getItem("code") || "";
   }
 };
 </script>
 
 <style>
-.my-editor {
-  background: #2d2d2d;
-  color: #fff;
-  font-family: Fira Mono, Consolas, Menlo, Courier, monospace;
-  font-size: 16px;
-  line-height: 1.6;
-}
-.prism-editor__textarea:focus {
-  outline: none;
-}
-
 @-webkit-keyframes rotating /* Safari and Chrome */ {
   from {
     -webkit-transform: rotate(0deg);
