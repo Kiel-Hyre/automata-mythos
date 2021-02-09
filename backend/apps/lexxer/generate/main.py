@@ -446,7 +446,7 @@ def lex_execute(string_arr=[]):
 
             elif char in [
                         '(', ')', '[', ']', '{', '}',
-                        ';', ':',
+                        ';', ':', ',',
                     ]:
                 if text: tokenize_arr.append(text_to_token(text, line))
                 tokenize_arr.append(text_to_token(char, line))
