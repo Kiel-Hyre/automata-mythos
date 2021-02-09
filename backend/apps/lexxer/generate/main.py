@@ -257,8 +257,23 @@ class EqualityOPToken(RelationalOPToken):
 class EqualOPToken(AssigmentOPToken):
     title = '='
 
-class AddEqualOPToken(AssigmentOPToken):
+class AddEqOPToken(AssigmentOPToken):
     title = '+='
+
+class SubEqOPToken(AssigmentOPToken):
+    title = '-='
+
+class MulEqOPToken(AssigmentOPToken):
+    title = '+='
+
+class DivEqOPToken(AssigmentOPToken):
+    title = '/='
+
+class ModEqOPToken(AssigmentOPToken):
+    title = '%='
+
+class ExpEqOPToken(AssigmentOPToken):
+    title = '^='
 
 
 TOKEN_DICT = {
@@ -332,6 +347,12 @@ TOKEN_DICT = {
     '==': EqualityOPToken,
     '=': EqualOPToken,
 
+    '+=': AddEqOPToken,
+    '-=': SubEqOPToken,
+    '*=': MulEqOPToken,
+    '/=': DivEqOPToken,
+    '%=': MulEqOPToken,
+    '^=': ExpEqOPToken,
 
     TextLiteralToken: TextLiteralToken, # breachable example "  TEXT-LIT ECHO()"
     CommentToken: CommentToken,  # breachable example   " # ECHO()"
@@ -340,10 +361,10 @@ TOKEN_DICT = {
     IdentifierToken: IdentifierToken,
 }
 
+ERROR_LIST = []
 
-# special ung dot, |<|, |>|
-# operators
-# identifier numlit, declit
+
+import re
 
 def text_to_token(text="", line=0, type_lit=None):
     if text:
@@ -351,19 +372,22 @@ def text_to_token(text="", line=0, type_lit=None):
             if type_lit: return TOKEN_DICT[type_lit](text, line)
             return TOKEN_DICT[text](text, line)
         except Exception as e:
-            # raise Exception(e)
-            # pass
-            # identifier, numlit, declit
 
-            if text.isdigit(): return TOKEN_DICT[IntegerLiteralToken](text, line)
-            if '.' in text and all(map(lambda x: x.isdigit(), text.split('.'))):
-                return TOKEN_DICT[DecimalLiteralToken](text, line)
+            # if a number and  whole number is within 9 go lexical?
+            if text.isdigit() and len(text) <= 9: return TOKEN_DICT[IntegerLiteralToken](text, line)
+
+            # decimal ?
+            if '.' in text:
+                num_arr = text.split('.')
+                if len(num_arr[0]) <= 9 and len(num_arr[1]) <= 5 \
+                    and num_arr[1] and all(map(lambda x: x.isdigit(), num_arr)):
+                    return TOKEN_DICT[DecimalLiteralToken](text, line)
 
             # [_a-z][]$* dapat mali pa to
-            return TOKEN_DICT[IdentifierToken](text, line)
+            if re.match(r"^[\_a-zA-Z][\_A-Za-z0-9]{0,31}$", text):
+                return TOKEN_DICT[IdentifierToken](text, line)
 
-            # else error like !
-
+            raise Exception(f"line {line} no lexical conversion found for {text}")
     # return (text, line, type_lit)
     return None
 
@@ -377,31 +401,33 @@ def lex_execute(string_arr=[]):
         text, index = "", 0
 
         while index < len(string_strip):
-
+            # raise Exception(list(string_strip))
             char = string_strip[index] # for some reason bugged in for-loop
-
             print(char, index, line, text)             #notsure yet
 
+            # special case .
+            if char == '.' \
+                and text and not text.isdigit():
+                tokenize_arr.append(text_to_token(text, line))
+                tokenize_arr.append(text_to_token(char, line))
+                text , index = "", index + 1
 
-            # special case
-            # if char == '.':
+            elif char == '|':
+                try:
+                    if string_strip[index+1] in ['>', '<'] \
+                        and string_strip[index+1+1] == '|':
+                        char += string_strip[index+1:index+1+1+1]
+                        index = index + 1 + 1 + 1
+                    else: index = index + 1
+                    if text: tokenize_arr.append(text_to_token(text, line))
+                    tokenize_arr.append(text_to_token(char, line))
+                except Exception as e:
+                    if text: tokenize_arr.append(text_to_token(text, line))
+                    tokenize_arr.append(text_to_token(char, line))
+                    index = index+1
+                text = ""
 
-            # special case
-            # |<| |>|
-
-            # special case
-            # >= <= == !=
-
-            # special case
-            # += -= *= /= %= ^=
-
-            # if ">=" in text: # 2 scenarios? (need logc) foo>=bar (good)foo >= bar
-            #     raise Exception(True)
-
-            # if ! and kasunod is =
-
-            if char in ['+', '-', '*', '/', '%', '^', '>', '<', '=', '!']:
-
+            elif char in ['+', '-', '*', '/', '%', '^', '>', '<', '=', '!']:
                 try:
                     if string_strip[index+1] == '=': # check if equals
                         # if so take it also as a char
@@ -434,8 +460,7 @@ def lex_execute(string_arr=[]):
                     elif _char == '"': break
 
                 if _text[-1] != '"': raise Exception(
-                    f'line: {line}: Not ending with quotation mark (")'
-                )
+                    f'line: {line}: Not ending with quotation mark (")')
                 tokenize_arr.append(
                     text_to_token(text=_text, line=line, type_lit=TextLiteralToken))
                 index, text= index + _index + 1, ""
@@ -457,6 +482,7 @@ def lex_execute(string_arr=[]):
                 text, index = text + char, index + 1
             tokenize_arr = list(filter(None, tokenize_arr)) # non-efficient, use for NONE error in ( )
 
+    # if ERROR_LIST: raise Exception(ERROR_LIST)
     return list(map(lambda x: x.val_to_dict(), tokenize_arr))
     # raise Exception(tokenize_arr)
 
