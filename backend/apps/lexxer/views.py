@@ -36,10 +36,16 @@ class LexxerExecuteView(APIView):
         try:
             data = lex_execute(data['raw_data'])
         except Exception as e:
-            return Response({'errors': str(e)},
-                status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                    'success': False,
+                    'errors': [str(e)],
+                    'data': [],
+                },
+                status=status.HTTP_200_OK)
 
-        return Response(
-                {'lexxer': self.OutputSerializer(data, many=True).data,
+        return Response({
+                    'success': True,
+                    'errors': [],
+                    'data': self.OutputSerializer(data, many=True).data,
                 },  status=status.HTTP_200_OK
             )
