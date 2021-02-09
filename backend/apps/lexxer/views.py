@@ -32,7 +32,11 @@ class LexxerExecuteView(APIView):
         serializer = self.InputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-        data = lex_execute(data['raw_data'])
+
+        try:
+            data = lex_execute(data['raw_data'])
+        except Exception as e:
+            return Response({ 'errors': str(e) })
 
         return Response(
                 {'lexxer': self.OutputSerializer(data, many=True).data}
