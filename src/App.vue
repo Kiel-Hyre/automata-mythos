@@ -13,8 +13,18 @@
         >
       </div>
       <v-row>
-        <v-col cols="7">
+        <v-col cols="12" md="7" class="pr-10">
           <div>
+            <div class="mb-5 d-flex">
+              <v-spacer></v-spacer>
+              <v-btn
+                style="background-color: rgba(0,0,0,0.08)"
+                @click="execute"
+                icon
+              >
+                <v-icon v-text="'fa-play'" size="16" class="ml-1" />
+              </v-btn>
+            </div>
             <v-sheet color="#2d2d2d" class="py-3">
               <codemirror
                 v-model="code"
@@ -22,30 +32,10 @@
                 :options="cmOptions"
               />
             </v-sheet>
-
-            <v-btn @click="execute" class="success text-none mt-10" large>
-              <v-icon
-                v-text="'fa-cog'"
-                size="20"
-                :class="{ rotating: loading }"
-                left
-              />
-              Execute
-            </v-btn>
-            <div v-if="stringifyCode" class="my-10 pa-5 rounded-lg">
-              <p
-                class="mb-0"
-                v-text="stringifyCode"
-                style="font-family: 'Fira Mono'"
-              />
-            </div>
           </div>
         </v-col>
-        <v-col>
-          <v-alert v-if="lexicalErrors.length" type="error">
-            {{ lexicalErrors[0] }}
-          </v-alert>
-          <v-simple-table v-else height="500">
+        <v-col cols="12" md="5">
+          <v-simple-table height="400">
             <template v-slot:default>
               <thead>
                 <tr>
@@ -69,6 +59,9 @@
           </v-simple-table>
         </v-col>
       </v-row>
+      <div>
+        {{ lexicalErrors }}
+      </div>
       <v-snackbar v-model="saved" timeout="3000" top right close
         >Saved</v-snackbar
       >
@@ -180,25 +173,22 @@ export default {
       const raw_data = JSON.stringify([
         ...this.code.replaceAll("\n", " \n").split("\n")
       ]);
+      const endpoint = "http://localhost:8000/lexxer/execute/";
 
-      this.loading = true;
+      const response = await this.axios.post(endpoint, { raw_data });
 
-      const response = await this.axios.post(
-        "http://localhost:8000/lexxer/execute/",
-        {
-          raw_data
-        }
-      );
-
-      const { success, data = [], errors = [] } = response["data"];
+      const { success, data = [], errors = [] } = response.data;
+      const { lex_errors = [] } = errors;
 
       this.loading = false;
 
       if (success) {
-        this.stringifyCode = raw_data;
         this.lexicalData = [...data];
         this.lexicalErrors = [];
-      } else this.lexicalErrors = [...errors];
+      } else {
+        this.lexicalData = [];
+        this.lexicalErrors = [...lex_errors];
+      }
     }
   },
 
