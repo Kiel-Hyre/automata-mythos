@@ -48,8 +48,8 @@ class LexxerExecuteView(APIView):
                 lexes = Lexxer(data.get('raw_data', []))
                 data['lex_data'] = lexes.list_val_to_dict_token
 
-                # syntaxes = Syntax(lexes.tokenize_arr)
-                # data['syn_data'] = syntaxes
+                syntaxes = Syntax(lexes.tokenize_arr)
+                data['syn_data'] = syntaxes
             except LexicalValidationError as le: # LexicalError
                 response['errors'] = {
                     'lex_errors': self.LexErrorSerializer(le.error_list,

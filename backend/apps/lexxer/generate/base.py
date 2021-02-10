@@ -23,9 +23,13 @@ class Token:
     def syntax_token(self):
         return self.__class__.__name__
 
+    @property
+    def type(self):
+        return type(self)
+
     def __repr__(self):
         return f"""
-        title: {self.title} value: {self.value} line: {self.line} desc: {self.description}"""
+        title: {self.title} value: {self.value} line: {self.line} desc: {self.description} charline: {self.char_line}"""
 
     def __str__(self):
         return self.value
@@ -53,167 +57,168 @@ class RelationalOPToken(Token):
 class AssigmentOPToken(Token):
     description = 'assigment-op'
 
+
 class AndToken(LogicalOPToken):
-    title = 'and'
+    title = 'AND'
 
 class BestowToken(ReservedWordToken):
-    title = 'bestow'
+    title = 'BESTOW'
 
 class BlessedToken(ReservedWordToken):
-    title = 'blessed'
+    title = 'BLESSED'
 
 class ChestToken(ReservedWordToken):
-    title = 'chest'
+    title = 'CHEST'
 
 class ChopToken(ReservedWordToken):
-    title = 'chop'
+    title = 'CHOP'
 
 class ChronoToken(ReservedWordToken):
-    title = 'chrono'
+    title = 'CHRONO'
 
 class CursedToken(ReservedWordToken):
-    title = 'cursed'
+    title = 'CURSED'
 
 class DayToken(ReservedWordToken):
-    title = 'day'
+    title = 'DAY'
 
 class EchoToken(ReservedWordToken):
-    title = 'ouput-call'
+    title = 'ECHO'
 
 class FateToken(ReservedWordToken):
-    title = 'fate'
+    title = 'FATE'
 
 class FutureToken(ReservedWordToken):
-    title = 'future'
+    title = 'FUTURE'
 
 class GoldToken(ReservedWordToken):
-    title = 'gold'
+    title = 'GOLD'
 
 class HeadToken(ReservedWordToken):
-    title = 'head'
+    title = 'HEAD'
 
 class HermesToken(ReservedWordToken):
-    title = 'hermes'
+    title = 'HERMES'
 
 class HydraToken(ReservedWordToken):
-    title = 'hydra'
+    title = 'HYDRA'
 
 class InToken(ReservedWordToken):
-    title = 'in'
+    title = 'IN'
 
 class NoneToken(ReservedWordToken):
-    title = 'none'
+    title = 'NONE'
 
 class NotToken(LogicalOPToken):
-    title = 'not'
+    title = 'NOT'
 
 class OfferToken(ReservedWordToken):
-    title = 'offer'
+    title = 'OFFER'
 
 class OlympusToken(ReservedWordToken):
-    title = 'olympus'
+    title = 'OLYMPUS'
 
 class OrToken(LogicalOPToken):
-    title = 'or'
+    title = 'OR'
 
 class PandoraToken(ReservedWordToken):
-    title = 'pandora'
+    title = 'PANDORA'
 
 class PastToken(ReservedWordToken):
-    title = 'past'
+    title = 'PAST'
 
 class ProphecyToken(ReservedWordToken):
-    title = 'prohecy'
+    title = 'PROPHECY'
 
 class QuestToken(ReservedWordToken):
-    title = 'quest'
+    title = 'QUEST'
 
 class RetrialToken(ReservedWordToken):
-    title = 'retrial'
+    title = 'RETRIAL'
 
 class RewardToken(ReservedWordToken):
-    title = 'reward'
+    title = 'REWARD'
 
 class SilverToken(ReservedWordToken):
-    title = 'SilverToken'
+    title = 'SILVER'
 
 class SkipToken(ReservedWordToken):
-    title = 'skip'
+    title = 'SKIP'
 
 class SlainToken(ReservedWordToken):
-    title = 'slain'
+    title = 'SLAIN'
 
 class SongToken(ReservedWordToken):
-    title = 'song'
+    title = 'SONG'
 
 class StopToken(ReservedWordToken):
-    title = 'stop'
+    title = 'STOP'
 
 class TrialToken(ReservedWordToken):
-    title = 'trial'
+    title = 'TRIAL'
 
 class VerdictToken(ReservedWordToken):
-    title = 'verdict'
+    title = 'VERDICT'
 
 
 # reserved symbols
 class OpeningColumnToken(ReservedSymbolToken):
-    title = 'opening-column'
+    title = '|<|'
 
 class CloseColumnToken(ReservedSymbolToken):
-    title = 'close-column'
+    title = '|>|'
 
 class OpenParenthesisToken(ReservedSymbolToken):
-    title = 'open-parenthesis'
+    title = '('
 
 class CloseParenthesisToken(ReservedSymbolToken):
-    title = 'close-parenthesis'
+    title = ')'
 
 class OpenBracketToken(ReservedSymbolToken):
-    title = 'open-bracket'
+    title = '['
 
 class CloseBracketToken(ReservedSymbolToken):
-    title = 'close-bracket'
+    title = ']'
 
 class OpenCurlyToken(ReservedSymbolToken):
-    title = 'open-curly'
+    title = '{'
 
 class CloseCurlyToken(ReservedSymbolToken):
-    title = 'close-curly'
+    title = '}'
 
 class ColonToken(ReservedSymbolToken):
-    title = 'colon'
+    title = ':'
 
 class CommaToken(ReservedSymbolToken):
-    title = 'comma'
+    title = ','
 
 class TerminatorToken(ReservedSymbolToken):
-    title = 'terminator'
+    title = ';'
 
 class AccessToken(ReservedSymbolToken):
-    title = 'access'
+    title = '.'
 
 
 # literals
 
 class IntegerLiteralToken(Token):
-    title = 'integer'
+    title = 'IntLit'
     description = 'integer-literal'
 
 class DecimalLiteralToken(Token):
-    title = 'decimal'
+    title = 'DecLit'
     description = 'decimal-literal'
 
 class CommentToken(Token):
-    title = 'comment'
+    title = 'Comment'
     description = 'single-comment'
 
 class TextLiteralToken(Token):
-    title = 'text'
+    title = 'TextLit'
     description = 'text-literal'
 
 class IdentifierToken(Token):
-    title = 'id'
+    title = 'Id'
     description = 'identifier'
 
 
