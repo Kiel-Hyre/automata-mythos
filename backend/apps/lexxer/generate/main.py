@@ -7,6 +7,7 @@ from .base import (
     IntegerLiteralToken,
     IdentifierToken,
     DecimalLiteralToken,
+    TextLiteralToken,
 )
 from .tokens import TOKEN_DICT
 
@@ -18,8 +19,10 @@ class LexExecute:
 
     def __init__(self):
         self.ERROR_LIST = []
+        self.tokenize_arr = []
 
     def append_error(self, message=" ", code="root"):
+        # bugged not reading code
         self.ERROR_LIST.append(ValidationError(_(message), code=code))
 
     def text_to_token(self, text="", line=0, type_lit=None):
@@ -46,7 +49,6 @@ class LexExecute:
                 self.append_error(
                     f"Line {line}: No lexical conversion found for {text}",
                     code='invalid')
-
         # return (text, line, type_lit)
         return None
 
@@ -120,7 +122,8 @@ class LexExecute:
                         self.append_error(
                             f'Line: {line}: Not ending with quotation mark (")')
                     tokenize_arr.append(
-                        self.text_to_token(text=_text, line=line, type_lit=TextLiteralToken))
+                        self.text_to_token(text=_text, line=line,
+                            type_lit=TextLiteralToken))
                     index, text= index + _index + 1, ""
 
                 # comment?
@@ -139,9 +142,10 @@ class LexExecute:
                 else:
                     text, index = text + char, index + 1
                 tokenize_arr = list(filter(None, tokenize_arr))
-                # non-efficient, use for NONE error in ( )
+                # non-efficient, use for NONE bug  in ( )
 
         if self.ERROR_LIST: raise ValidationError(self.ERROR_LIST)
-        return list(map(lambda x: x.val_to_dict(), tokenize_arr))
+        self.tokenize_arr = tokenize_arr # copy reference
+        return list(map(lambda x: x.val_to_dict(), self.tokenize_arr))
         # raise Exception(tokenize_arr)
 

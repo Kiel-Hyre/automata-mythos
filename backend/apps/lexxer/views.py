@@ -37,7 +37,6 @@ class LexxerExecuteView(APIView):
         description = serializers.CharField()
         line = serializers.IntegerField()
 
-
     def post(self, request, *args, **kwargs):
         serializer = self.InputSerializer(data=request.data)
 
