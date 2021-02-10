@@ -8,6 +8,7 @@ from .base import (
     IdentifierToken,
     DecimalLiteralToken,
     TextLiteralToken,
+    CommentToken,
 )
 from .tokens import TOKEN_DICT
 
@@ -134,7 +135,7 @@ class LexExecute:
                         self.append_error(
                             f'Line: {line}: Not ending with quotation mark (")',
                             code='quote', line=line, char_line=_index)
-                    self.append_token(text=text, line=line, index=index,
+                    self.append_token(text=_text, line=line, index=_index,
                         type_lit=TextLiteralToken)
                     index, text= index + _index + 1, ""
 
