@@ -155,7 +155,8 @@ class LexExecute:
                 # non-efficient, use for NONE bug  in ( )
 
         # raise Exception(self.ERROR_LIST)
+        # raise Exception(list(map(lambda x: x.syntax_token, self.tokenize_arr)))
         if self.ERROR_LIST: raise LexicalValidationError(self.ERROR_LIST)
         return list(map(lambda x: x.val_to_dict(), self.tokenize_arr))
-        # raise Exception(tokenize_arr)
+
 

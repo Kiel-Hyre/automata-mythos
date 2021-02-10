@@ -45,11 +45,13 @@ class LexxerExecuteView(APIView):
 
             try:
                 data['lex_data'] = LexExecute().execute(data.get('raw_data'))
-            except Exception as e: # LexicalError
+            except LexicalValidationError as le: # LexicalError
                 response['errors'] = {
-                    'lex_errors': self.LexErrorSerializer(e.error_list,
+                    'lex_errors': self.LexErrorSerializer(le.error_list,
                     many=True).data
                 }
+            except Exception as e:
+                raise Exception(e)
             else:
                 response['success'] = True
                 response['data'] = self.OutputSerializer(

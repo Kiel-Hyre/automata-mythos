@@ -19,6 +19,10 @@ class Token:
             'line': self.line
         }
 
+    @property
+    def syntax_token(self):
+        return self.__class__.__name__
+
     def __repr__(self):
         return f"""
         title: {self.title} value: {self.value} line: {self.line} desc: {self.description}"""
