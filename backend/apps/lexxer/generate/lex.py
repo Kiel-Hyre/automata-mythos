@@ -23,13 +23,21 @@ class LexicalValidationError(ValidationError):
         self.char_line = char_line
 
 
-class LexExecute:
+class Lexxer:
     LIMIT_INTEGER = 9 # not here maybe
     LIMIT_DECIMAL = 5
 
-    def __init__(self):
+    def __init__(self, data=[]):
         self.ERROR_LIST = []
+        self.string_arr = data
         self.tokenize_arr = []
+
+        # execute
+        self.execute()
+
+    @property
+    def list_val_to_dict_token(self):
+        return list(map(lambda x: x.val_to_dict(), self.tokenize_arr))
 
     def append_token(self, text="", line=0, index=0, type_lit=None):
         self.tokenize_arr.append(self.text_to_token(text, line, index, type_lit))
@@ -66,10 +74,10 @@ class LexExecute:
         # return (text, line, type_lit)
         return None
 
-    def execute(self, string_arr=[]):
-        if not string_arr: return []
+    def execute(self):
+        if not self.string_arr: return []
 
-        for line, string in enumerate(string_arr, start=1):
+        for line, string in enumerate(self.string_arr, start=1):
             string_strip = string.strip() + ' '  # clean side +  ' ' detect last
             text, index = "", 0
 
@@ -158,6 +166,5 @@ class LexExecute:
         # raise Exception(self.ERROR_LIST)
         # raise Exception(list(map(lambda x: x.syntax_token, self.tokenize_arr)))
         if self.ERROR_LIST: raise LexicalValidationError(self.ERROR_LIST)
-        return list(map(lambda x: x.val_to_dict(), self.tokenize_arr))
-
+        return True
 

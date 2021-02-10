@@ -5,11 +5,10 @@ class Token:
     title = ""
     description = ""
 
-    def __init__(self, value="", ln=0, type=None):
+    def __init__(self, value="", ln=0, charln=0):
         self.value = value
         self.line = ln
-        self.type = None
-
+        self.charln = charln
 
     def val_to_dict(self):
         return {
