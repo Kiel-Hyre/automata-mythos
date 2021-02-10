@@ -1,11 +1,13 @@
 import json
+
+from django.core.exceptions import ValidationError
+from django.shortcuts import render
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import serializers, status
 
-from django.shortcuts import render
-
-from .generate.main import LexExecute
+from .generate.main import LexExecute, LexicalValidationError
 
 
 # Create your views here.
@@ -22,14 +24,10 @@ class LexxerExecuteView(APIView):
             except:
                 raise serializers.ValidationError('Failed to load')
 
-        def validate(self, data):
-            data = super().validate(data)
-
-            try:
-                data['lex_data'] = LexExecute().execute(data.get('raw_data'))
-            except serializers.ValidationError as v:
-                raise serializers.ValidationError(v, code='root')
-            return data
+    class LexErrorSerializer(serializers.Serializer):
+        line = serializers.IntegerField()
+        char_line = serializers.IntegerField()
+        message = serializers.CharField()
 
     class OutputSerializer(serializers.Serializer):
         value = serializers.CharField()
@@ -39,13 +37,23 @@ class LexxerExecuteView(APIView):
 
     def post(self, request, *args, **kwargs):
         serializer = self.InputSerializer(data=request.data)
+        ERROR_LIST = []
 
         response = {'success': False, 'errors':[], 'data': None}
         if serializer.is_valid():
             data = serializer.validated_data
-            response['success'] = True
-            response['data'] = self.OutputSerializer(
-                data['lex_data'], many=True).data
+
+            try:
+                data['lex_data'] = LexExecute().execute(data.get('raw_data'))
+            except Exception as e: # LexicalError
+                response['errors'] = {
+                    'lex_errors': self.LexErrorSerializer(e.error_list,
+                    many=True).data
+                }
+            else:
+                response['success'] = True
+                response['data'] = self.OutputSerializer(
+                    data['lex_data'], many=True).data
         else:
             response['errors'] = serializer.errors
         return Response(response, status=status.HTTP_200_OK)
