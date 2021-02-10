@@ -1,29 +1,25 @@
 <template>
   <v-app>
     <v-container>
-      <div class="my-10">
+      <div class="mt-5 mb-10 text-center">
         <v-img
-          :src="require('@/assets/mythos.png')"
+          :src="require('@/assets/logo - mythosv1.png')"
           class="mx-auto"
-          width="300"
+          width="350"
         />
+        <span
+          class="text-h5 text-uppercase brown--text text--darken-1 font-weight-bold"
+          >Lexical and Syntax Analyzer</span
+        >
       </div>
       <v-row>
         <v-col cols="7">
           <div>
-            <div class="mt-10 mb-5">
-              <span
-                >Press <kbd dark>alt + ctrl + s</kbd> to save,
-                <kbd dark>alt + ctrl + r</kbd> to run</span
-              >
-            </div>
             <v-sheet color="#2d2d2d" class="py-3">
               <codemirror
                 v-model="code"
-                @keydown.ctrl.83.prevent="saveChanges"
-                @keydown.ctrl.82.prevent="execute"
+                class="text-body-2"
                 :options="cmOptions"
-                placeholder="Write your own story ..."
               />
             </v-sheet>
 
@@ -81,9 +77,11 @@
 </template>
 
 <script>
-import { codemirror } from "vue-codemirror";
+import { codemirror, CodeMirror } from "vue-codemirror";
+require("codemirror/addon/mode/simple.js");
+
 import "codemirror/lib/codemirror.css";
-import "codemirror/theme/monokai.css";
+import "codemirror/theme/mbo.css";
 import "codemirror/addon/display/fullscreen.css";
 import "codemirror/addon/scroll/simplescrollbars.css";
 
@@ -96,7 +94,27 @@ import "codemirror/addon/search/search";
 import "codemirror/addon/scroll/simplescrollbars";
 import "codemirror/addon/display/placeholder";
 
-// import "codemirror/addon/";
+CodeMirror.defineSimpleMode("mythos", {
+  start: [
+    { regex: /"(?:[^\\]|\\.)*?(?:"|$)/, token: "string" },
+    { regex: /(QUEST)(\s+)([a-z\_0-9A-Z$][\w$]*)/, token: "variable-2" },
+    {
+      regex: /(?:AND|BESTOW|CHEST|CHOP|CHRONO|DAY|ECHO|FATE|FUTURE|GOLD|HEAD|HERMES|HYDRA|IN|NOT|OFFER|OLYMPUS|OR|PANDORA|PAST|PROPHECY|QUEST|RETRIAL|REWARD|SILVER|SKIP|SLAIN|SONG|STOP|TRIAL|VERDICT)\b/,
+      token: "keyword"
+    },
+    { regex: /BLESSED|CURSED|NONE/, token: "atom" },
+    {
+      regex: /0x[a-f\d]+|[-+]?(?:\.\d+|\d+\.?\d*)(?:e[-+]?\d+)?/i,
+      token: "number"
+    },
+    { regex: /\?\?.*/, token: "comment" },
+    { regex: /[-+\/*%^=<>!]+/, token: "operator" },
+
+    { regex: /[a-z\_0-9A-Z$]+[\w$]*/, token: "variable" }
+  ],
+  comment: [{ regex: /.*/, token: "comment" }],
+  meta: { dontIndentStates: ["comment"], lineComment: "??" }
+});
 
 export default {
   components: {
@@ -119,15 +137,20 @@ export default {
       lexicalErrors: [],
       cmOptions: {
         tabSize: 2,
-        theme: "monokai",
+        theme: "mbo",
+        mode: "mythos",
         lineNumbers: true,
         line: true,
         autofocus: true,
         lineWiseCopyCut: true,
-        autoCloseBrackets: true,
+        autoCloseBrackets: {
+          pairs: '(){}[]||""',
+          explode: "[]{}()"
+        },
         matchBrackets: true,
         styleActiveLine: true,
         scrollbarStyle: "overlay",
+
         extraKeys: {
           F11: function(cm) {
             cm.setOption("fullScreen", !cm.getOption("fullScreen"));
@@ -138,7 +161,7 @@ export default {
           "Ctrl-S": function() {
             self.saveChanges();
           },
-          "Ctrl-R": function(cm) {
+          "Ctrl-R": function() {
             self.execute();
           }
         }
