@@ -7,7 +7,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import serializers, status
 
-from .generate.main import LexExecute, LexicalValidationError
+from .generate.lex import Lexxer, LexicalValidationError
+from .generate.syntax import Syntax
 
 
 # Create your views here.
@@ -29,7 +30,7 @@ class LexxerExecuteView(APIView):
         char_line = serializers.IntegerField()
         message = serializers.CharField()
 
-    class OutputSerializer(serializers.Serializer):
+    class LexOutputSerializer(serializers.Serializer):
         value = serializers.CharField()
         title = serializers.CharField()
         description = serializers.CharField()
@@ -42,9 +43,12 @@ class LexxerExecuteView(APIView):
         response = {'success': False, 'errors':[], 'data': None}
         if serializer.is_valid():
             data = serializer.validated_data
-
             try:
-                data['lex_data'] = LexExecute().execute(data.get('raw_data'))
+                lexes = Lexxer(data.get('raw_data', []))
+                data['lex_data'] = lexes.list_val_to_dict_token
+
+                # syntaxes = Syntax(lexes.tokenize_arr)
+                # data['syn_data'] = syntaxes
             except LexicalValidationError as le: # LexicalError
                 response['errors'] = {
                     'lex_errors': self.LexErrorSerializer(le.error_list,
@@ -54,7 +58,7 @@ class LexxerExecuteView(APIView):
                 raise Exception(e)
             else:
                 response['success'] = True
-                response['data'] = self.OutputSerializer(
+                response['data'] = self.LexOutputSerializer(
                     data['lex_data'], many=True).data
         else:
             response['errors'] = serializer.errors
