@@ -1,7 +1,7 @@
 """
 Read and excute strings to lexical tokens
 """
-from django.core.exceptions import ValidationError
+from django.forms import ValidationError
 from django.utils.translation import ugettext_lazy as _
 from .base import (
     IntegerLiteralToken,
@@ -13,6 +13,15 @@ from .tokens import TOKEN_DICT
 
 import re
 
+
+class LexicalValidationError(ValidationError):
+
+    def __init__(self, message, code=None, params=None, line=0, char_line=0):
+        super().__init__(message, code, params)
+        self.line = line
+        self.char_line = char_line
+
+
 class LexExecute:
     LIMIT_INTEGER = 9 # not here maybe
     LIMIT_DECIMAL = 5
@@ -21,11 +30,15 @@ class LexExecute:
         self.ERROR_LIST = []
         self.tokenize_arr = []
 
-    def append_error(self, message=" ", code="root"):
-        # bugged not reading code
-        self.ERROR_LIST.append(ValidationError(_(message), code=code))
+    def append_token(self, text="", line=0, index=0, type_lit=None):
+        self.tokenize_arr.append(self.text_to_token(text, line, index, type_lit))
 
-    def text_to_token(self, text="", line=0, type_lit=None):
+    def append_error(self, message=" ", code="root", line=0, char_line=0):
+        # bugged not reading code
+        self.ERROR_LIST.append(LexicalValidationError(_(message),
+            code=code, line=line, char_line=char_line))
+
+    def text_to_token(self, text="", line=0, index=0, type_lit=None):
         if text:
             try:
                 if type_lit: return TOKEN_DICT[type_lit](text, line)
@@ -47,15 +60,14 @@ class LexExecute:
                     return TOKEN_DICT[IdentifierToken](text, line)
 
                 self.append_error(
-                    f"Line {line}: No lexical conversion found for {text}",
-                    code='invalid')
+                    f"No lexical conversion found for {text}",
+                    code='conversion', line=line, char_line=index)
         # return (text, line, type_lit)
         return None
 
     def execute(self, string_arr=[]):
         if not string_arr: return []
 
-        tokenize_arr = []
         for line, string in enumerate(string_arr, start=1):
             string_strip = string.strip() + ' '  # clean side +  ' ' detect last
             text, index = "", 0
@@ -67,8 +79,8 @@ class LexExecute:
 
                 if char == '.' \
                     and text and not text.isdigit():
-                    tokenize_arr.append(self.text_to_token(text, line))
-                    tokenize_arr.append(self.text_to_token(char, line))
+                    self.append_token(text, line, index)
+                    self.append_token(char, line, index)
                     text , index = "", index + 1
 
                 elif char == '|':
@@ -78,11 +90,11 @@ class LexExecute:
                             char += string_strip[index+1:index+1+1+1]
                             index = index + 1 + 1 + 1
                         else: index = index + 1
-                        if text: tokenize_arr.append(self.text_to_token(text, line))
-                        tokenize_arr.append(self.text_to_token(char, line))
+                        if text: self.append_token(text, line, index)
+                        self.append_token(char, line, index)
                     except Exception as e:
-                        if text: tokenize_arr.append(self.text_to_token(text, line))
-                        tokenize_arr.append(self.text_to_token(char, line))
+                        if text: self.append_token(text, line, index)
+                        self.append_token(char, line, index)
                         index = index+1
                     text = ""
 
@@ -95,11 +107,11 @@ class LexExecute:
                         else: index = index + 1
 
                         # check before text
-                        if text: tokenize_arr.append(self.text_to_token(text, line))
-                        tokenize_arr.append(self.text_to_token(char, line))
+                        if text: self.append_token(text, line, index)
+                        self.append_token(char, line, index)
                     except:
-                        if text: tokenize_arr.append(self.text_to_token(text, line))
-                        tokenize_arr.append(self.text_to_token(char, line))
+                        if text: self.append_token(text, line, index)
+                        self.append_token(char, line, index)
                         index = index+1
                     text = ""
 
@@ -107,8 +119,8 @@ class LexExecute:
                             '(', ')', '[', ']', '{', '}',
                             ';', ':', ',',
                         ]:
-                    if text: tokenize_arr.append(self.text_to_token(text, line))
-                    tokenize_arr.append(self.text_to_token(char, line))
+                    if text: self.append_token(text, line, index)
+                    self.append_token(char, line, index)
                     text, index = "", index +1
 
                 elif char == '"':
@@ -120,32 +132,30 @@ class LexExecute:
 
                     if _text[-1] != '"':
                         self.append_error(
-                            f'Line: {line}: Not ending with quotation mark (")')
-                    tokenize_arr.append(
-                        self.text_to_token(text=_text, line=line,
-                            type_lit=TextLiteralToken))
+                            f'Line: {line}: Not ending with quotation mark (")',
+                            code='quote', line=line, char_line=_index)
+                    self.append_token(text=text, line=line, index=index,
+                        type_lit=TextLiteralToken)
                     index, text= index + _index + 1, ""
 
                 # comment?
                 elif text == "??":
-                    tokenize_arr.append(self.text_to_token(
-                        string_strip[string_strip.find(text)::],
-                        line,
-                        type_lit=CommentToken)
-                    )
+                    self.append_token(
+                        text=string_strip[string_strip.find(text)::],
+                        line=line, index=index,type_lit=CommentToken)
                     break
 
                 elif char == ' ':
-                    if text: tokenize_arr.append(self.text_to_token(text, line))
+                    if text: self.append_token(text, line, index)
                     text, index = "", index + 1
 
                 else:
                     text, index = text + char, index + 1
-                tokenize_arr = list(filter(None, tokenize_arr))
+                self.tokenize_arr = list(filter(None, self.tokenize_arr))
                 # non-efficient, use for NONE bug  in ( )
 
-        if self.ERROR_LIST: raise ValidationError(self.ERROR_LIST)
-        self.tokenize_arr = tokenize_arr # copy reference
+        # raise Exception(self.ERROR_LIST)
+        if self.ERROR_LIST: raise LexicalValidationError(self.ERROR_LIST)
         return list(map(lambda x: x.val_to_dict(), self.tokenize_arr))
         # raise Exception(tokenize_arr)
 
