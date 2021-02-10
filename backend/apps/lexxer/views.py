@@ -5,7 +5,8 @@ from rest_framework import serializers, status
 
 from django.shortcuts import render
 
-from .generate.main import lex_execute
+from .generate.main import LexExecute
+
 
 # Create your views here.
 class LexxerExecuteView(APIView):
@@ -21,6 +22,15 @@ class LexxerExecuteView(APIView):
             except:
                 raise serializers.ValidationError('Failed to load')
 
+        def validate(self, data):
+            data = super().validate(data)
+
+            try:
+                data['lex_data'] = LexExecute().execute(data.get('raw_data'))
+            except serializers.ValidationError as v:
+                raise serializers.ValidationError(v, code='root')
+            return data
+
     class OutputSerializer(serializers.Serializer):
         value = serializers.CharField()
         title = serializers.CharField()
@@ -30,22 +40,13 @@ class LexxerExecuteView(APIView):
 
     def post(self, request, *args, **kwargs):
         serializer = self.InputSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        data = serializer.validated_data
 
-        try:
-            data = lex_execute(data['raw_data'])
-        except Exception as e:
-            return Response({
-                    'success': False,
-                    'errors': [str(e)],
-                    'data': [],
-                },
-                status=status.HTTP_200_OK)
-
-        return Response({
-                    'success': True,
-                    'errors': [],
-                    'data': self.OutputSerializer(data, many=True).data,
-                },  status=status.HTTP_200_OK
-            )
+        response = {'success': False, 'errors':[], 'data': None}
+        if serializer.is_valid():
+            data = serializer.validated_data
+            response['success'] = True
+            response['data'] = self.OutputSerializer(
+                data['lex_data'], many=True).data
+        else:
+            response['errors'] = serializer.errors
+        return Response(response, status=status.HTTP_200_OK)
