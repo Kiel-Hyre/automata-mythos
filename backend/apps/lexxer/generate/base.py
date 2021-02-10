@@ -5,17 +5,18 @@ class Token:
     title = ""
     description = ""
 
-    def __init__(self, value="", ln=0, charln=0):
+    def __init__(self, value="", ln=0, char_line=0):
         self.value = value
         self.line = ln
-        self.charln = charln
+        self.char_line = char_line + 1
 
     def val_to_dict(self):
         return {
             'value': self.value,
             'title': self.title,
             'description': self.description,
-            'line': self.line
+            'line': self.line,
+            'char_line': self.char_line
         }
 
     @property

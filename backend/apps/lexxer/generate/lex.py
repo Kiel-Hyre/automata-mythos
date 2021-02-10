@@ -50,23 +50,23 @@ class Lexxer:
     def text_to_token(self, text="", line=0, index=0, type_lit=None):
         if text:
             try:
-                if type_lit: return TOKEN_DICT[type_lit](text, line)
-                return TOKEN_DICT[text](text, line)
+                if type_lit: return TOKEN_DICT[type_lit](text, line, char_line=index)
+                return TOKEN_DICT[text](text, line, char_line=index)
             except Exception as e:
 
                 # if a number and  whole number is within 9 go lexical?
                 if text.isdigit() and len(text) <= self.LIMIT_INTEGER:
-                    return TOKEN_DICT[IntegerLiteralToken](text, line)
+                    return TOKEN_DICT[IntegerLiteralToken](text, line, char_line=index)
 
                 if '.' in text:
                     num_arr = text.split('.')
                     if len(num_arr[0]) <= self.LIMIT_INTEGER \
                         and len(num_arr[1]) <= self.LIMIT_DECIMAL \
                         and num_arr[1] and all(map(lambda x: x.isdigit(), num_arr)):
-                        return TOKEN_DICT[DecimalLiteralToken](text, line)
+                        return TOKEN_DICT[DecimalLiteralToken](text, line, char_line=index)
 
                 if re.match(r"^[\_a-zA-Z][\_A-Za-z0-9]{0,31}$", text):
-                    return TOKEN_DICT[IdentifierToken](text, line)
+                    return TOKEN_DICT[IdentifierToken](text, line, char_line=index)
 
                 self.append_error(
                     f"No lexical conversion found for {text}",
