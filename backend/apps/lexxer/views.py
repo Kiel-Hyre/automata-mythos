@@ -31,8 +31,8 @@ class LexxerExecuteView(APIView):
         message = serializers.CharField()
 
     class LexOutputSerializer(serializers.Serializer):
+        name = serializers.CharField()
         value = serializers.CharField()
-        title = serializers.CharField()
         description = serializers.CharField()
         line = serializers.IntegerField()
         char_line = serializers.IntegerField()
@@ -46,6 +46,7 @@ class LexxerExecuteView(APIView):
             data = serializer.validated_data
             try:
                 lexes = Lexxer(data.get('raw_data', []))
+                raise Exception(lexes.tokenize_arr)
                 data['lex_data'] = lexes.list_val_to_dict_token
 
                 # syntaxes = Syntax(lexes.tokenize_arr)
