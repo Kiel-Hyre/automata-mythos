@@ -1,6 +1,4 @@
-
-
-
+from .base import *
 
 class Syntax:
     def __init__(self, lexes):
@@ -8,6 +6,4 @@ class Syntax:
         self.execute()
 
     def execute(self):
-        # do something
-        pass
-
+        return True
