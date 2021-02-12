@@ -16,7 +16,6 @@
         <v-col cols="12" md="7" class="pr-10">
           <div>
             <div class="mb-5 d-flex">
-              <v-spacer></v-spacer>
               <v-btn
                 style="background-color: rgba(0,0,0,0.08)"
                 @click="execute"
@@ -24,19 +23,60 @@
               >
                 <v-icon v-text="'fa-play'" size="16" class="ml-1" />
               </v-btn>
+              <v-spacer></v-spacer>
             </div>
-            <v-sheet color="#2d2d2d" class="py-3">
-              <codemirror
-                v-model="code"
-                class="text-body-2"
-                :options="cmOptions"
+            <span class="text-body-2">Untitled.myth</span>
+            <codemirror
+              @cursorActivity="highlight"
+              v-model="code"
+              :options="cmOptions"
+              ref="codemirror"
+              class="text-body-2"
+            />
+            <v-sheet
+              class="d-flex white--text px-3 py-1 text-body-2"
+              color="rgb(78,78,78)"
+            >
+              <v-spacer></v-spacer>
+              <span v-text="`Ln ${cmCursorPos.line}, Col ${cmCursorPos.ch}`" />
+
+              <v-icon
+                v-if="!executedOnce || loading"
+                v-text="'fa-cog'"
+                dark
+                size="16"
+                class="ml-3"
+                :class="{ rotating: loading }"
               />
+
+              <v-icon
+                v-if="!loading && executedOnce && !errorCount"
+                color="success"
+                dark
+                size="16"
+                v-text="'fa-check-circle'"
+                class="ml-3"
+              />
+
+              <span v-if="!loading && executedOnce && errorCount">
+                <v-icon
+                  color="error"
+                  dark
+                  size="16"
+                  v-text="'fa-times-circle'"
+                  class="ml-3"
+                />
+                <span
+                  v-text="errorCount"
+                  class="text-body-2 ml-1 red--text text--lighten-3"
+                />
+              </span>
             </v-sheet>
           </div>
         </v-col>
         <v-col cols="12" md="5">
           <v-simple-table height="400">
-            <template v-slot:default>
+            <template #default>
               <thead>
                 <tr>
                   <th
@@ -48,19 +88,116 @@
                   </th>
                 </tr>
               </thead>
-              <tbody>
-                <tr v-for="item in lexicalData" :key="item.name">
+              <tbody v-if="lexicalData.length">
+                <tr
+                  @click="showErrorLine(item.lineno, item.char_line)"
+                  v-for="item in lexicalData"
+                  :key="item.name"
+                  class=" no-select"
+                >
                   <td v-for="header in lexicalTableHeaders" :key="header.value">
-                    <span v-text="item[header.value]" />
+                    <span
+                      v-text="item[header.value]"
+                      :class="{
+                        'font-weight-bold': header.value === 'lineno'
+                      }"
+                    />
                   </td>
                 </tr>
+              </tbody>
+              <tbody v-else>
+                <td :colspan="lexicalTableHeaders.length">
+                  <div class="pa-5 text-body-1">
+                    <div v-if="loading" class="d-flex justify-center">
+                      Building ...
+                    </div>
+                    <div v-else class="d-flex justify-center">
+                      <div v-if="!executedOnce">
+                        <v-btn @click="execute" class="text-none">
+                          <v-icon v-text="'fa-play'" size="12" class="mr-4" />
+                          Run the analyzer
+                        </v-btn>
+                      </div>
+                    </div>
+                  </div>
+                </td>
               </tbody>
             </template>
           </v-simple-table>
         </v-col>
       </v-row>
-      <div>
-        {{ lexicalErrors }}
+      <div class="mt-5">
+        <v-tabs
+          v-model="selectedTab"
+          background-color="grey lighten-4"
+          active-class="elevation-3"
+          class="rounded-t-lg"
+          color="brown--text text--darken-1"
+          hide-slider
+        >
+          <v-tab v-for="tab in tabs" :key="tab">
+            <span v-text="tab" />
+            <span v-if="errors[tab].length">
+              <v-icon
+                v-text="'fa-exclamation-triangle'"
+                color="red"
+                class="mx-3"
+                size="16"
+              />
+              <span
+                v-text="errors[tab].length"
+                class="text-body-2 red--text text--lighten-3"
+              />
+            </span>
+          </v-tab>
+        </v-tabs>
+        <v-card>
+          <v-simple-table height="400">
+            <template #default>
+              <thead>
+                <tr>
+                  <th
+                    v-for="header in analyzerTableHeaders"
+                    :key="header.value"
+                    class="font-weight-bold text-body-1 text--center"
+                    :width="header.width"
+                  >
+                    <v-icon
+                      v-if="header.value === 'icon'"
+                      v-text="'fa-caret-down'"
+                      class="mt-n1"
+                    />
+                    <span v-else v-text="header.text" />
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  @click="showErrorLine(item.line, item.char_line)"
+                  v-for="item in errors[tabs[selectedTab]]"
+                  :key="item.name"
+                  class="no-select"
+                >
+                  <td
+                    v-for="header in analyzerTableHeaders"
+                    :key="header.value"
+                    class="text-body-1 text--center"
+                  >
+                    <v-icon
+                      v-if="header.value === 'icon'"
+                      v-text="'fa-exclamation-triangle'"
+                      color="red"
+                      class="mt-n1"
+                      size="16"
+                    />
+
+                    <span v-else v-text="item[header.value]" />
+                  </td>
+                </tr>
+              </tbody>
+            </template>
+          </v-simple-table>
+        </v-card>
       </div>
       <v-snackbar v-model="saved" timeout="3000" top right close
         >Saved</v-snackbar
@@ -79,6 +216,7 @@ import "codemirror/addon/display/fullscreen.css";
 import "codemirror/addon/scroll/simplescrollbars.css";
 
 import "codemirror/addon/edit/matchbrackets";
+import "codemirror/addon/lint/lint";
 import "codemirror/addon/edit/closebrackets";
 import "codemirror/addon/selection/active-line";
 import "codemirror/addon/display/fullscreen";
@@ -97,7 +235,7 @@ CodeMirror.defineSimpleMode("mythos", {
     },
     { regex: /BLESSED|CURSED|NONE/, token: "atom" },
     {
-      regex: /0x[a-f\d]+|[-+]?(?:\.\d+|\d+\.?\d*)(?:e[-+]?\d+)?/i,
+      regex: /[-]?(?:\d+\.?\d*)/i,
       token: "number"
     },
     { regex: /\?\?.*/, token: "comment" },
@@ -108,6 +246,9 @@ CodeMirror.defineSimpleMode("mythos", {
   comment: [{ regex: /.*/, token: "comment" }],
   meta: { dontIndentStates: ["comment"], lineComment: "??" }
 });
+
+// ^(0$|[1-9][0-9]{0,8})(\.\d{1,5})?$
+// ^(?=.{1,23}$)[_a-zA-Z][A-Za-z0-9_]*
 
 export default {
   components: {
@@ -122,12 +263,24 @@ export default {
       saved: false,
       lexicalData: [],
       lexicalTableHeaders: [
+        { text: "Ln", value: "lineno" },
         { text: "Lexeme", value: "value" },
-        { text: "Token", value: "title" },
-        { text: "Description", value: "description" },
-        { text: "Ln", value: "line" }
+        { text: "Token", value: "type" },
+        { text: "Description", value: "description" }
       ],
       lexicalErrors: [],
+      syntaxErrors: [],
+      analyzerTableHeaders: [
+        { text: "", value: "icon" },
+        { text: "Ln", value: "line" },
+        { text: "Col", value: "char_line" },
+        {
+          text: "Messages",
+          value: "message",
+          width: "80%",
+          align: "center"
+        }
+      ],
       cmOptions: {
         tabSize: 2,
         theme: "mbo",
@@ -143,14 +296,8 @@ export default {
         matchBrackets: true,
         styleActiveLine: true,
         scrollbarStyle: "overlay",
-
+        lint: true,
         extraKeys: {
-          F11: function(cm) {
-            cm.setOption("fullScreen", !cm.getOption("fullScreen"));
-          },
-          Esc: function(cm) {
-            if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false);
-          },
           "Ctrl-S": function() {
             self.saveChanges();
           },
@@ -158,37 +305,76 @@ export default {
             self.execute();
           }
         }
-      }
+      },
+      cmCursorPos: {
+        line: 1,
+        ch: 0
+      },
+      executedOnce: false,
+      errors: {
+        lexical: [],
+        syntax: []
+      },
+      tableData: {
+        lexical: [],
+        syntax: []
+      },
+      selectedTab: 0,
+      tabs: ["lexical", "syntax"]
     };
   },
+  computed: {
+    errorCount() {
+      const { lexical, syntax } = this.errors;
+      return lexical.length + syntax.length;
+    }
+  },
   methods: {
-    highlight(code) {
-      return code;
+    showErrorLine(line, ch) {
+      this.$refs.codemirror.codemirror.focus();
+      this.$refs.codemirror.codemirror.setCursor({
+        line: line - 1,
+        ch: ch - 1
+      });
+    },
+    highlight(cursor) {
+      const { ch, line } = cursor.getCursor();
+      this.cmCursorPos = Object.assign({}, this.cmCursorPos, {
+        ch,
+        line: line + 1
+      });
     },
     saveChanges() {
       localStorage.setItem("code", this.code);
       this.saved = true;
     },
-    async execute() {
-      const raw_data = JSON.stringify([
-        ...this.code.replaceAll("\n", " \n").split("\n")
-      ]);
-      const endpoint = "http://localhost:8000/lexxer/execute/";
+    execute() {
+      this.loading = true;
+      this.lexicalData = [];
+      setTimeout(async () => {
+        const raw_data = this.code;
+        const endpoint = "http://localhost:8000/lexxer/execute/";
 
-      const response = await this.axios.post(endpoint, { raw_data });
+        const response = await this.axios.post(endpoint, { raw_data });
 
-      const { success, data = [], errors = [] } = response.data;
-      const { lex_errors = [] } = errors;
+        const { success, data = [], errors = [] } = response.data;
 
-      this.loading = false;
+        this.loading = false;
 
-      if (success) {
-        this.lexicalData = [...data];
-        this.lexicalErrors = [];
-      } else {
-        this.lexicalData = [];
-        this.lexicalErrors = [...lex_errors];
-      }
+        if (success) {
+          this.lexicalData = [...data["lexical"]];
+          this.tabs.forEach(tab => {
+            this.errors[tab] = [];
+          });
+        } else {
+          this.tabs.forEach(tab => {
+            this.lexicalData = [];
+            this.errors[tab] = errors.filter(error => error.code === tab);
+          });
+        }
+
+        if (!this.executedOnce) this.executedOnce = true;
+      }, 500);
     }
   },
 
@@ -233,5 +419,13 @@ export default {
   -ms-animation: rotating 2s linear infinite;
   -o-animation: rotating 2s linear infinite;
   animation: rotating 2s linear infinite;
+}
+
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  cursor: pointer;
 }
 </style>
