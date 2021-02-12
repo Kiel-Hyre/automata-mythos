@@ -11,7 +11,7 @@ class SyntaxValidationError(ValidationError):
         self.char_line = char_line
 
 class MythSyntax:
-    # lexer = MythLexer
+    lexer = MythLexer
     tokens = MythLexer.tokens
     start = 'program'
 
@@ -64,21 +64,18 @@ class MythSyntax:
                  | chestAccess'''
 
     def p_valueExpr(self, p):
-        '''valueExpr : OPPAR unaryOp value expression CLPAR
+        '''valueExpr : OPPAR valueExpr CLPAR
                      | unaryOp value expression'''
 
 
     # expression
     # MAYBE THERE IS ONE MORE OPTION NA MERON ()
     def p_expression(self, p):
-        '''expression : OPPAR expressionOption CLPAR
-                      | expressionOption
+        '''expression : OPPAR expression CLPAR
+                      | arithmeticExpression
+                      | relationalExpression
+                      | logicalExpression
                       | empty'''
-
-    def p_expressionOption(self, p):
-        '''expressionOption : arithmeticExpression
-                            | relationalExpression
-                            | logicalExpression'''
 
     def p_logicalExpression(self, p):
         '''logicalExpression : logicalOP valueExpr'''
@@ -325,12 +322,13 @@ class MythSyntax:
         pass
 
     def p_error(self, p):
-        # sometimes None
-        if p == None: self.append_error(f"Unable to detect!")
-        else: self.append_error(f"Syntax error at {p.value!r}")
+        # None EOF
+        if p is None: self.append_error(f"End Of File : Tip! Put a main block: OLYMPUS")
+        else: self.append_error(f"Syntax error at {p.lineno!r}:{p.char_line} {p.value!r}")
+        # self.parser.errok() # ?? disable if want only one instance of this RECOVERY MODE
 
     def __init__(self):
-        # self.lexer = self.lexer()
+        self.lexer = self.lexer()
         self.parser = yacc.yacc(start=self.start, module=self, debug=True)
         self.ERROR_LIST = []
 
@@ -338,7 +336,8 @@ class MythSyntax:
         self.ERROR_LIST.append(SyntaxValidationError(message))
 
     def test(self, data):
-        result = self.parser.parse(data ,tracking=True)
+        self.lexer.input(data)
+        result = self.parser.parse(data, lexer=self.lexer.lexer, tracking=True)
         return result
 
 def parse(data=""):
