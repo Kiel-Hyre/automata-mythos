@@ -66,7 +66,7 @@ class LexxerExecuteView(APIView):
             if not response['errors']:
                 response['success'] = True
                 response['data'] ={
-                    'lex': self.LexOutputSerializer(data['lex_data'],
+                    'lexical': self.LexOutputSerializer(data['lex_data'],
                         many=True).data,
                     'syntax': data['syn_data']
                 }
