@@ -317,7 +317,8 @@ class MythLexer:
         return t
 
     def t_NUM(self, t):
-        r'^0|[1-9][0-9]{0,8}\.?[\d]{0,4}'
+        # r'^0|[1-9][0-9]{0,8}\.?[\d]{0,4}'
+        r'(0|[1-9][0-9]{0,8})(\.[0-9]{1,5})?'
         t.type = 'NUM'
         t.char_line = self.find_column(t)
         t.description = 'num-literal'
