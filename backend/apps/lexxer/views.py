@@ -28,7 +28,8 @@ class LexxerExecuteView(APIView):
         #     except:
         #         raise serializers.ValidationError('Failed to load')
 
-    class LexErrorSerializer(serializers.Serializer):
+    class ErrorSerializer(serializers.Serializer):
+        code = serializers.CharField()
         line = serializers.IntegerField()
         char_line = serializers.IntegerField()
         message = serializers.CharField()
@@ -47,25 +48,28 @@ class LexxerExecuteView(APIView):
         response = {'success': False, 'errors':[], 'data': None}
         if serializer.is_valid():
             data = serializer.validated_data
-            try:
-                # lexes = Lexxer(data.get('raw_data', []))
-                # data['lex_data'] = lexes.list_val_to_dict_token
-                data['lex_data'] = lex_parse(data['raw_data'])
-
-                syn_parse(data['raw_data'])
+            # lexes = Lexxer(data.get('raw_data', []))
+            # data['lex_data'] = lexes.list_val_to_dict_token
+            try: data['lex_data'] = lex_parse(data['raw_data'])
             except Exception as e:
-
                 if hasattr(e, 'error_list'):
-                    response['errors'] = {
-                        'lex_errors': self.LexErrorSerializer(e.error_list,
+                    response['errors'] = self.ErrorSerializer(e.error_list,
                         many=True).data
-                    }
-                else:
-                    raise Exception(e)
-            else:
+                else: raise Exception(e)
+            try: data['syn_data'] = syn_parse(data['raw_data']) # bool
+            except Exception as e:
+                if hasattr(e, 'error_list'):
+                    response['errors'].extend(self.ErrorSerializer(e.error_list,
+                        many=True).data)
+                else: raise Exception(e)
+
+            if not response['errors']:
                 response['success'] = True
-                response['data'] = self.LexOutputSerializer(
-                    data['lex_data'], many=True).data
+                response['data'] ={
+                    'lex': self.LexOutputSerializer(data['lex_data'],
+                        many=True).data,
+                    'syntax': data['syn_data']
+                }
         else:
             response['errors'] = serializer.errors
         return Response(response, status=status.HTTP_200_OK)
