@@ -11,19 +11,22 @@ from .generate.lex import Lexxer, LexicalValidationError
 from .generate.syntax import Syntax
 
 
+from .generate.myth.lex import parse as lex_parse
+
+
 # Create your views here.
 class LexxerExecuteView(APIView):
     class InputSerializer(serializers.Serializer):
         raw_data = serializers.CharField()
 
-        def validate_raw_data(self, data):
-            try:
-                data = json.loads(data)
-                if type(data) not in [list]:
-                    raise serializers.ValidationError('Failed to load')
-                return data
-            except:
-                raise serializers.ValidationError('Failed to load')
+        # def validate_raw_data(self, data):
+        #     try:
+        #         data = json.loads(data)
+        #         if type(data) not in [list]:
+        #             raise serializers.ValidationError('Failed to load')
+        #         return data
+        #     except:
+        #         raise serializers.ValidationError('Failed to load')
 
     class LexErrorSerializer(serializers.Serializer):
         line = serializers.IntegerField()
@@ -31,10 +34,10 @@ class LexxerExecuteView(APIView):
         message = serializers.CharField()
 
     class LexOutputSerializer(serializers.Serializer):
-        name = serializers.CharField()
+        type = serializers.CharField()
         value = serializers.CharField()
         description = serializers.CharField()
-        line = serializers.IntegerField()
+        lineno = serializers.IntegerField()
         char_line = serializers.IntegerField()
 
     def post(self, request, *args, **kwargs):
@@ -45,19 +48,14 @@ class LexxerExecuteView(APIView):
         if serializer.is_valid():
             data = serializer.validated_data
             try:
-                lexes = Lexxer(data.get('raw_data', []))
-                raise Exception(lexes.tokenize_arr)
-                data['lex_data'] = lexes.list_val_to_dict_token
-
-                # syntaxes = Syntax(lexes.tokenize_arr)
-                # data['syn_data'] = syntaxes
-            except LexicalValidationError as le: # LexicalError
+                # lexes = Lexxer(data.get('raw_data', []))
+                # data['lex_data'] = lexes.list_val_to_dict_token
+                data['lex_data'] = lex_parse(data['raw_data'])
+            except Exception as e:
                 response['errors'] = {
-                    'lex_errors': self.LexErrorSerializer(le.error_list,
+                    'lex_errors': self.LexErrorSerializer(e.error_list,
                     many=True).data
                 }
-            except Exception as e:
-                raise Exception(e)
             else:
                 response['success'] = True
                 response['data'] = self.LexOutputSerializer(

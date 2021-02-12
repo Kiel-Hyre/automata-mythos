@@ -82,8 +82,8 @@ DESC_TOKEN_DICT = {
     '<=': RELATIONAL_OP,
     '!=': RELATIONAL_OP,
     '==': RELATIONAL_OP,
-    '=': RELATIONAL_OP,
 
+    '=': ASSIGN_OP,
     '+=': ASSIGN_OP,
     '-=': ASSIGN_OP,
     '*=': ASSIGN_OP,
@@ -96,3 +96,12 @@ DESC_TOKEN_DICT = {
     DecimalLiteralToken: DEC_LIT,
     IdentifierToken: IDENTIFIER,
 }
+
+DESC_TOKEN_LIST = []
+for k in DESC_TOKEN_DICT.keys():
+    if type(k) in [str]: DESC_TOKEN_LIST.append(k)
+DESC_TOKEN_LIST.extend([TextLiteralToken.name,
+    IntegerLiteralToken.name,
+    DecimalLiteralToken.name,
+    IdentifierToken.name
+])
