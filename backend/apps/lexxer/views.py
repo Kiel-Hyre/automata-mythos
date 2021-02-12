@@ -12,7 +12,7 @@ from .generate.syntax import Syntax
 
 
 from .generate.myth.lex import parse as lex_parse
-
+from .generate.myth.syn import parse as syn_parse
 
 # Create your views here.
 class LexxerExecuteView(APIView):
@@ -51,11 +51,17 @@ class LexxerExecuteView(APIView):
                 # lexes = Lexxer(data.get('raw_data', []))
                 # data['lex_data'] = lexes.list_val_to_dict_token
                 data['lex_data'] = lex_parse(data['raw_data'])
+
+                syn_parse(data['raw_data'])
             except Exception as e:
-                response['errors'] = {
-                    'lex_errors': self.LexErrorSerializer(e.error_list,
-                    many=True).data
-                }
+
+                if hasattr(e, 'error_list'):
+                    response['errors'] = {
+                        'lex_errors': self.LexErrorSerializer(e.error_list,
+                        many=True).data
+                    }
+                else:
+                    raise Exception(e)
             else:
                 response['success'] = True
                 response['data'] = self.LexOutputSerializer(

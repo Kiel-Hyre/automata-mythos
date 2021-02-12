@@ -1,7 +1,7 @@
 from django.forms import ValidationError
 from django.utils.translation import ugettext_lazy as _
 
-from backend.apps.lexxer.generate.ply import lex, yacc
+from backend.apps.lexxer.generate.ply import lex
 
 reserved_words = {
     'AND': 'AND_OP', # operator
@@ -52,6 +52,7 @@ class MythLexer:
         'NUM', #conflicts with DECIMAL, DOT, ID NO LIMIT YET
         'TEXT', # NO LIMIT YET
         'ID',
+        'BOOL',
     ] +  list(reserved_words.values())
     tokens.extend(
         [ # groupings
@@ -168,6 +169,13 @@ class MythLexer:
         t.description = 'colon'
         return t
 
+    def t_COMMA(self ,t):
+        r'\,'
+        t.type = 'COMMA'
+        t.char_line = self.find_column(t)
+        t.description = 'comma'
+        return t
+
     def t_SEMICOLON(self, t):
         r'\;'
         t.type = 'SEMICOLON'
@@ -204,7 +212,7 @@ class MythLexer:
         return t
 
     def t_DIV_ASSIGN(self, t):
-        r'\\\='
+        r'\/\='
         t.type = 'DIV_ASSIGN'
         t.char_line = self.find_column(t)
         t.description = 'div-assign'
@@ -239,7 +247,7 @@ class MythLexer:
         return t
 
     def t_DIV_OP(self, t):
-        r'\\'
+        r'\/'
         t.type = 'DIV_OP'
         t.char_line = self.find_column(t)
         t.description = 'div-operator'
@@ -309,11 +317,12 @@ class MythLexer:
         return t
 
     def t_NUM(self, t):
-        r'\d+[.]?\d+'
+        r'^0|[1-9][0-9]{0,8}\.?[\d]{0,4}'
         t.type = 'NUM'
         t.char_line = self.find_column(t)
         t.description = 'num-literal'
-        t.value = float(t.value)
+        t.value = t.value
+        # ^(?=.\d{0,8}(|(\.\d{1,5}))$)(0$|[1-9][0-9]*)([.][\d]+)?
         return t
 
     def t_TEXT(self, t):
@@ -324,7 +333,7 @@ class MythLexer:
         return t
 
     def t_ID(self, t):
-        r'[a-zA-Z_][a-zA-Z_0-9]*'
+        r'[_a-zA-Z][a-zA-Z0-9]{0,31}'
         t.type = reserved_words.get(t.value, 'ID')
         t.char_line = self.find_column(t)
         if t.value in ['BLESSED', 'CURSED']:
@@ -372,7 +381,7 @@ class MythLexer:
              tok = self.lexer.token()
              if not tok:
                  break
-             print(tok)
+             #print(tok)
              self.TOKEN_LIST.append(tok)
 
 
