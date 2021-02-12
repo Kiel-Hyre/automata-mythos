@@ -134,3 +134,6 @@ pnpm-debug.log*
 *.njsproj
 *.sln
 *.sw?
+
+
+parser.out
