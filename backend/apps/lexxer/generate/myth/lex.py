@@ -41,7 +41,7 @@ reserved_words = {
 
 class LexicalValidationError(ValidationError):
 
-    def __init__(self, message, code='lex', params=None, line=0, char_line=0):
+    def __init__(self, message, code='lexical', params=None, line=0, char_line=0):
         super().__init__(message, code, params)
         self.line = line
         self.char_line = char_line
@@ -347,7 +347,7 @@ class MythLexer:
 
         self.append_error(
             f'Illegal character {t.value[0]}',
-                code='lex', line=t.lexer.lineno, char_line=char_line)
+                code='lexical', line=t.lexer.lineno, char_line=char_line)
         print(f"Line {t.lexer.lineno} char_line {char_line} Illegal character {t.value[0]}")
         t.lexer.skip(1)
 
@@ -359,7 +359,7 @@ class MythLexer:
         line_start = self.data.rfind('\n', 0, token.lexpos) + 1
         return (token.lexpos - line_start) + 1
 
-    def append_error(self, message=" ", code="lex", line=0, char_line=0):
+    def append_error(self, message=" ", code="lexical", line=0, char_line=0):
 
         # bugged not reading code
         self.ERROR_LIST.append(LexicalValidationError(_(message),
