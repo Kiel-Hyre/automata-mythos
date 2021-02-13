@@ -327,7 +327,7 @@ class MythLexer:
         return t
 
     def t_TEXT(self, t):
-        r'\".*\"'
+        r'\"(?:[^\n\r\\]|\\.)*?\"' 
         t.type = 'TEXT'
         t.char_line = self.find_column(t)
         t.description = 'text-literal'
