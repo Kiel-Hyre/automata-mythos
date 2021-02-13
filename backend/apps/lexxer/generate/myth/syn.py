@@ -4,7 +4,6 @@ from .lex import MythLexer
 
 
 class SyntaxValidationError(ValidationError):
-
     def __init__(self, message, code='syntax', params=None, line=0, char_line=0):
         super().__init__(message, code, params)
         self.line = line
@@ -122,7 +121,8 @@ class MythSyntax:
     def p_valueExpression(self, p):
         '''valueExpression : OPPAR valueExpression CLPAR
                            | unaryOP valueExpression
-                           | unaryOP value expression'''
+                           | unaryOP value expression
+                           | value expression'''
 
     def p_assignExpression(self, p):
         '''assignExpression : id assignOP valueExpression SEMICOLON'''
@@ -190,15 +190,14 @@ class MythSyntax:
 
     # Chest
 
-
-
     # Reserved Words
 
     def p_pandora(self, p):
         '''pandora : PANDORA declaration'''
 
     def p_slain(self, p):
-        '''slain : SLAIN COLON statement'''
+        '''slain : SLAIN COLON statement
+                 | empty'''
 
     def p_breaker(self, p):
         '''breaker : SKIP SEMICOLON
@@ -354,7 +353,8 @@ class MythSyntax:
     def p_statement(self, p):
         '''statement : conditionalStatement body
                      | iterationStatement body
-                     | singleStatement body'''
+                     | singleStatement body
+                     | empty'''
 
     def p_singleStatement(self, p):
         '''singleStatement : pandora
@@ -374,10 +374,14 @@ class MythSyntax:
                               | hermes
                               | prophecy'''
 
+    def p_output(self, p):
+        '''output : valueExpression
+                  | empty'''
+
     def p_inputOutput(self, p):
         '''inputOutput : OFFER OPPAR id CLPAR SEMICOLON
-                       | ECHO OPPAR valueExpression CLPAR SEMICOLON'''
-
+                       | ECHO OPPAR output CLPAR SEMICOLON'''
+        
     def p_trial(self, p):
         '''trial : TRIAL OPPAR valueExpression CLPAR OPCOLUMN statement CLCOLUMN nextTrial endTrial'''
 
