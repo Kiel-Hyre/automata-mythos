@@ -17,7 +17,7 @@ from .generate.myth.syn import parse as syn_parse
 # Create your views here.
 class LexxerExecuteView(APIView):
     class InputSerializer(serializers.Serializer):
-        raw_data = serializers.CharField()
+        raw_data = serializers.CharField(required=False)
 
         # def validate_raw_data(self, data):
         #     try:
@@ -50,13 +50,13 @@ class LexxerExecuteView(APIView):
             data = serializer.validated_data
             # lexes = Lexxer(data.get('raw_data', []))
             # data['lex_data'] = lexes.list_val_to_dict_token
-            try: data['lex_data'] = lex_parse(data['raw_data'])
+            try: data['lex_data'] = lex_parse(data.get('raw_data', ''))
             except Exception as e:
                 if hasattr(e, 'error_list'):
                     response['errors'] = self.ErrorSerializer(e.error_list,
                         many=True).data
                 else: raise Exception(e)
-            try: data['syn_data'] = syn_parse(data['raw_data']) # bool
+            try: data['syn_data'] = syn_parse(data.get('raw_data','')) # bool
             except Exception as e:
                 if hasattr(e, 'error_list'):
                     response['errors'].extend(self.ErrorSerializer(e.error_list,
