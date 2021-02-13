@@ -16,7 +16,7 @@ class MythSyntax:
 
     def p_program(self, p):
         '''program : global OLYMPUS OPCOLUMN body CLCOLUMN'''
-    
+
     def p_global(self, p):
         '''global : pandora global
                   | chest global
@@ -32,7 +32,7 @@ class MythSyntax:
                     | SILVER
                     | FATE'''
 
-    def p_id(self, p): 
+    def p_id(self, p):
         '''id : ID arrayChestQuestOption'''
 
     def p_arrayChestQuestOption(self, p):
@@ -100,14 +100,14 @@ class MythSyntax:
     def p_extraArrayValue(self, p):
         '''extraArrayValue : COMMA valueExpression extraArrayValue
                            | empty'''
-    
+
     def p_extraMemoryArrayValue(self, p):
         '''extraMemoryArrayValue : COMMA OPCURL valueExpression extraArrayValue CLCURL extraMemoryArrayValue
                                  | empty'''
 
     # Array
-    
-    
+
+
 
     # Expression
 
@@ -117,7 +117,7 @@ class MythSyntax:
                       | logicalExpression
                       | empty'''
 
-                               
+
     def p_valueExpression(self, p):
         '''valueExpression : OPPAR valueExpression CLPAR
                            | unaryOP valueExpression
@@ -126,7 +126,7 @@ class MythSyntax:
 
     def p_assignExpression(self, p):
         '''assignExpression : id assignOP valueExpression SEMICOLON'''
-    
+
     def p_assignOP(self, p):
         '''assignOP : ASSIGN
                     | ADD_ASSIGN
@@ -156,7 +156,7 @@ class MythSyntax:
 
     def p_relationalExpression(self, p):
         '''relationalExpression : relationalOP valueExpression'''
-    
+
     def p_relationalOP(self, p):
         '''relationalOP : EQ_OP
                         | GT_OP
@@ -164,7 +164,7 @@ class MythSyntax:
                         | LT_OP
                         | LTE_OP
                         | NE_OP'''
-    
+
     def p_unaryOP(self, p):
         '''unaryOP : NOT_OP unaryOP
                    | MINUS_OP unaryOP
@@ -206,7 +206,7 @@ class MythSyntax:
 
     def p_chrono(self, p):
         '''chrono : CHRONO OPPAR loopValueContainer past future day CLPAR OPCOLUMN loopBody CLCOLUMN'''
-    
+
     def p_past(self, p):
         '''past : PAST valueExpression'''
 
@@ -216,10 +216,10 @@ class MythSyntax:
     def p_day(self, p):
         '''day : DAY valueExpression
                | empty'''
-    
+
     def p_hermes(self, p):
         '''hermes : HERMES OPPAR loopValueContainer IN value CLPAR OPCOLUMN loopBody CLCOLUMN'''
-    
+
     def p_prophecy(self, p):
         '''prophecy : PROPHECY OPPAR valueExpression CLPAR OPCOLUMN loopBody CLCOLUMN'''
 
@@ -242,8 +242,8 @@ class MythSyntax:
 
     def p_questReturn(self, p):
         '''questReturn : REWARD dataType
-                       | empty'''    
-    
+                       | empty'''
+
     def p_questParamCall(self, p):
         '''questParamCall : valueExpression questCallContinue
                           | empty'''
@@ -254,17 +254,17 @@ class MythSyntax:
 
     def p_questStatement(self, p):
         '''questStatement : BESTOW valueExpression SEMICOLON questStatement
-                          | questTrial questStatement 
+                          | questTrial questStatement
                           | questIterationStatement questStatement
                           | questHydra questStatement
                           | singleStatement questStatement
                           | empty'''
-    
+
     def p_questIterationStatement(self, p):
         '''questIterationStatement : questChrono
                                    | questProphecy
                                    | questHermes'''
-    
+
     def p_questTrial(self, p):
         '''questTrial : TRIAL OPPAR valueExpression CLPAR OPCOLUMN questStatement CLCOLUMN questNextTrial questEndTrial'''
 
@@ -275,33 +275,33 @@ class MythSyntax:
     def p_questEndTrial(self, p):
         '''questEndTrial : VERDICT OPCOLUMN questStatement CLCOLUMN
                          | empty'''
-    
+
     def p_questHydra(self, p):
         '''questHydra : HYDRA OPPAR id CLPAR OPCOLUMN questCases CLCOLUMN'''
 
     def p_questCases(self, p):
         '''questCases : questHead questSlain
                       | empty'''
-    
+
     def p_questHead(self, p):
         '''questHead : HEAD OPPAR valueExpression CLPAR COLON questStatement chop questHead
                      | empty'''
-    
+
     def p_questSlain(self, p):
         '''questSlain : SLAIN COLON questStatement
                       | empty'''
 
     def p_questChrono(self, p):
         '''questChrono : CHRONO OPPAR loopValueContainer past future day CLPAR OPCOLUMN questLoopBody CLCOLUMN'''
-    
+
     def p_loopValueContainer(self, p):
         '''loopValueContainer : dataType ID
                               | id'''
-    
+
     def p_questLoopBody(self, p):
         '''questLoopBody : questLoopStatement breaker questLoopBody
                          | empty'''
-    
+
     def p_questProphecy(self, p):
         '''questProphecy : PROPHECY OPPAR valueExpression CLPAR OPCOLUMN questLoopBody CLCOLUMN'''
 
@@ -310,18 +310,18 @@ class MythSyntax:
 
     def p_questForTrial(self, p):
         '''questForTrial : TRIAL OPPAR valueExpression CLPAR OPCOLUMN questLoopBody CLCOLUMN questForNextTrial questForEndTrial'''
-    
+
     def p_questForNextTrial(self, p):
         '''questForNextTrial : RETRIAL OPPAR valueExpression CLPAR OPCOLUMN questLoopBody CLCOLUMN questForNextTrial
                              | empty'''
 
     def p_questForEndTrial(self, p):
-        '''questForEndTrial : VERDICT OPCOLUMN questLoopBody CLCOLUMN 
+        '''questForEndTrial : VERDICT OPCOLUMN questLoopBody CLCOLUMN
                             | empty'''
 
     def p_questForHydra(self, p):
         '''questForHydra : HYDRA OPPAR id CLPAR OPCOLUMN questForCases CLCOLUMN'''
-    
+
     def p_questForCases(self, p):
         '''questForCases : questForHead questForSlain
                          | empty'''
@@ -339,9 +339,9 @@ class MythSyntax:
                               | questForTrial
                               | questForHydra
                               | questIterationStatement
-                              | BESTOW valueExpression SEMICOLON 
+                              | BESTOW valueExpression SEMICOLON
                               | empty'''
-    
+
     def p_questCall(self, p):
         '''questCall : ID OPPAR questParamCall CLPAR'''
 
@@ -358,7 +358,7 @@ class MythSyntax:
 
     def p_singleStatement(self, p):
         '''singleStatement : pandora
-                           | declaration 
+                           | declaration
                            | inputOutput
                            | assignExpression
                            | questCall SEMICOLON
@@ -366,9 +366,9 @@ class MythSyntax:
                            | SEMICOLON'''
 
     def p_conditionalStatement(self, p):
-        '''conditionalStatement : trial 
+        '''conditionalStatement : trial
                                 | hydra'''
-    
+
     def p_iterationStatement(self, p):
         '''iterationStatement : chrono
                               | hermes
@@ -381,24 +381,24 @@ class MythSyntax:
     def p_inputOutput(self, p):
         '''inputOutput : OFFER OPPAR id CLPAR SEMICOLON
                        | ECHO OPPAR output CLPAR SEMICOLON'''
-    
+        
     def p_trial(self, p):
         '''trial : TRIAL OPPAR valueExpression CLPAR OPCOLUMN statement CLCOLUMN nextTrial endTrial'''
 
     def p_nextTrial(self, p):
         '''nextTrial : RETRIAL OPPAR valueExpression CLPAR OPCOLUMN statement CLCOLUMN nextTrial
                      | empty'''
-    
+
     def p_endTrial(self, p):
         '''endTrial : VERDICT OPCOLUMN statement CLCOLUMN'''
-    
+
     def p_hydra(self, p):
         '''hydra : HYDRA OPPAR id CLPAR OPCOLUMN cases CLCOLUMN'''
 
     def p_cases(self, p):
         '''cases : head slain
                  | empty'''
-    
+
     def p_loopBody(self, p):
         '''loopBody : loopStatement breaker loopBody
                     | empty'''
@@ -409,7 +409,7 @@ class MythSyntax:
                          | loopHydra
                          | iterationStatement
                          | empty'''
-    
+
     def p_loopTrial(self, p):
         '''loopTrial : TRIAL OPPAR valueExpression CLPAR OPCOLUMN loopBody CLCOLUMN loopNextTrial loopEndTrial'''
 
@@ -419,19 +419,19 @@ class MythSyntax:
 
     def p_loopEndTrial(self, p):
         '''loopEndTrial : VERDICT OPCOLUMN loopBody CLCOLUMN
-                        | empty'''       
+                        | empty'''
 
     def p_loopHdyra(self, p):
-        '''loopHydra : HYDRA OPPAR id CLPAR OPCOLUMN loopCases CLCOLUMN'''  
+        '''loopHydra : HYDRA OPPAR id CLPAR OPCOLUMN loopCases CLCOLUMN'''
 
     def p_loopCases(self, p):
         '''loopCases : loopHead loopSlain
-                     | empty'''   
-    
+                     | empty'''
+
     def p_loopHead(self, p):
         '''loopHead :  HEAD OPPAR valueExpression CLPAR COLON loopBody chop loopHead
                     | empty'''
-    
+
     def p_loopSlain(self, p):
         '''loopSlain : SLAIN COLON loopBody
                      | empty'''
@@ -458,15 +458,15 @@ class MythSyntax:
     def append_error(self, message="", code="syntax", params="", line=0, char_line=0):
         self.ERROR_LIST.append(SyntaxValidationError(message, code, params, line, char_line))
 
-    def test(self, data):
-        self.lexer.input(data)
+    def test(self, data, baseline=1):
+        self.lexer.input(data, baseline)
         result = self.parser.parse(data, lexer=self.lexer.lexer, tracking=True)
         if self.ERROR_LIST: raise SyntaxValidationError(self.ERROR_LIST)
         return result
 
-def parse(data=""):
+def parse(data="", baseline=1):
     syntax = MythSyntax(lex_debug=True, debug=True)
-    syntax.test(data)
+    syntax.test(data, baseline)
     return True
 
 
