@@ -91,6 +91,7 @@ class MythLexer:
             'DIV_ASSIGN',
             'MOD_ASSIGN',
             'POW_ASSIGN',
+            'NL',
         ]
     )
 
@@ -369,14 +370,16 @@ class MythLexer:
     def build(self, debug=False, **kwargs):
         self.lexer = lex.lex(debug=debug, module=self, **kwargs)
 
-    def input(self, data="", run=False):
+    def input(self, data="", baseline=1, run=False):
         # save data and clear at first
         self.data = data
+        self.baseline = baseline
         self.ERROR_LIST = []
         self.TOKEN_LIST = []
         if run: self.test()
 
     def test(self):
+        self.lexer.lineno = self.baseline
         self.lexer.input(self.data)
         while True:
              tok = self.lexer.token()
@@ -387,7 +390,7 @@ class MythLexer:
 
 
 # mini class
-def parse(string=""):
+def parse(string="", baseline=1):
     mythLex = MythLexer()
     mythLex.input(string, run=True)
     if mythLex.ERROR_LIST: raise LexicalValidationError(mythLex.ERROR_LIST)

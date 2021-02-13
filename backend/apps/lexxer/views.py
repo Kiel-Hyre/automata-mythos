@@ -18,6 +18,7 @@ from .generate.myth.syn import parse as syn_parse
 class LexxerExecuteView(APIView):
     class InputSerializer(serializers.Serializer):
         raw_data = serializers.CharField(required=False)
+        start_line = serializers.IntegerField(initial=1, required=False)
 
         # def validate_raw_data(self, data):
         #     try:
@@ -27,6 +28,10 @@ class LexxerExecuteView(APIView):
         #         return data
         #     except:
         #         raise serializers.ValidationError('Failed to load')
+
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.fields['raw_data'].strip = False
 
     class ErrorSerializer(serializers.Serializer):
         code = serializers.CharField()
@@ -50,13 +55,15 @@ class LexxerExecuteView(APIView):
             data = serializer.validated_data
             # lexes = Lexxer(data.get('raw_data', []))
             # data['lex_data'] = lexes.list_val_to_dict_token
-            try: data['lex_data'] = lex_parse(data.get('raw_data', ''))
+            try: data['lex_data'] = lex_parse(
+                data.get('raw_data', ''), data.get('start_line', 1))
             except Exception as e:
                 if hasattr(e, 'error_list'):
                     response['errors'] = self.ErrorSerializer(e.error_list,
                         many=True).data
                 else: raise Exception(e)
-            try: data['syn_data'] = syn_parse(data.get('raw_data','')) # bool
+            try: data['syn_data'] = syn_parse(
+                data.get('raw_data',''), data.get('start_line', 1)) # bool
             except Exception as e:
                 if hasattr(e, 'error_list'):
                     response['errors'].extend(self.ErrorSerializer(e.error_list,
