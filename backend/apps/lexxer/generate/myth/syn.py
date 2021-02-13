@@ -212,7 +212,8 @@ class MythSyntax:
         '''prophecy : PROPHECY OPPAR valueExpression CLPAR OPCOLUMN loopBody CLCOLUMN'''
 
     def p_head(self, p):
-        '''head : HEAD OPPAR valueExpression CLPAR COLON statement chop head'''
+        '''head : HEAD OPPAR valueExpression CLPAR COLON statement chop head
+                | empty'''
 
 
     def p_chop(self, p):
