@@ -1,31 +1,128 @@
 <template>
   <v-app>
+    <input
+      type="file"
+      accept=".myth, .txt"
+      ref="fileUpload"
+      class="d-none"
+      @change="uploadFile"
+    />
     <v-container>
       <div class="mt-5 mb-10 text-center">
         <v-img
           :src="require('@/assets/logo - mythosv1.png')"
           class="mx-auto"
-          width="350"
+          width="300"
         />
         <span
-          class="text-h5 text-uppercase brown--text text--darken-1 font-weight-bold"
+          class="text-h6 text-uppercase brown--text text--darken-1 font-weight-bold"
           >Lexical and Syntax Analyzer</span
         >
       </div>
       <v-row>
-        <v-col cols="12" md="7" class="pr-10">
+        <v-col>
           <div>
-            <div class="mb-5 d-flex">
-              <v-btn
-                style="background-color: rgba(0,0,0,0.08)"
-                @click="execute"
-                icon
-              >
-                <v-icon v-text="'fa-play'" size="16" class="ml-1" />
-              </v-btn>
+            <v-sheet
+              color="rgb(78,78,78)"
+              class="d-flex align-center px-5 py-2 rounded-t-lg"
+            >
+              <v-tooltip top>
+                <template #activator="{attrs, on}">
+                  <v-btn
+                    v-on="on"
+                    v-bind="attrs"
+                    style="background-color: rgba(0,0,0,0.08)"
+                    @click="newCode"
+                    class="text-none font-weight-bold mr-5"
+                    color="white"
+                    icon
+                    small
+                  >
+                    <v-icon v-text="'far fa-file'" size="16" />
+                  </v-btn>
+                </template>
+                New Code <kbd>[Ctrl + N]</kbd>
+              </v-tooltip>
+
+              <v-tooltip top>
+                <template #activator="{attrs, on}">
+                  <v-btn
+                    v-on="on"
+                    v-bind="attrs"
+                    style="background-color: rgba(0,0,0,0.08)"
+                    @click="open"
+                    class="text-none font-weight-bold mr-5"
+                    color="white"
+                    icon
+                    small
+                  >
+                    <v-icon v-text="'fa-file-import'" size="16" />
+                  </v-btn>
+                </template>
+                Import .myth file <kbd>[Ctrl + O]</kbd>
+              </v-tooltip>
+
+              <v-tooltip top>
+                <template #activator="{attrs, on}">
+                  <v-btn
+                    v-on="on"
+                    v-bind="attrs"
+                    style="background-color: rgba(0,0,0,0.08)"
+                    @click="saveChanges"
+                    class="text-none font-weight-bold mr-5"
+                    color="white"
+                    icon
+                  >
+                    <v-icon v-text="'fa-save'" size="16" />
+                  </v-btn>
+                </template>
+                Save <kbd>[Ctrl + S]</kbd>
+              </v-tooltip>
+
+              <v-tooltip top>
+                <template #activator="{attrs, on}">
+                  <v-btn
+                    v-on="on"
+                    v-bind="attrs"
+                    style="background-color: rgba(0,0,0,0.08)"
+                    @click="showDownload = true"
+                    class="text-none font-weight-bold mr-5"
+                    color="white"
+                    icon
+                  >
+                    <v-icon v-text="'fa-arrow-alt-circle-down'" size="16" />
+                  </v-btn>
+                </template>
+                Download
+              </v-tooltip>
+
+              <v-tooltip top>
+                <template #activator="{attrs, on}">
+                  <v-btn
+                    @click="showLexical = !showLexical"
+                    v-on="on"
+                    v-bind="attrs"
+                    style="background-color: rgba(0,0,0,0.08)"
+                    class="text-none font-weight-bold mr-5"
+                    color="white"
+                    icon
+                  >
+                    <v-icon v-text="'fa-table'" size="16" />
+                  </v-btn>
+                </template>
+                Show Lexical
+              </v-tooltip>
               <v-spacer></v-spacer>
-            </div>
-            <span class="text-body-2">Untitled.myth</span>
+              <v-btn
+                @click="execute"
+                class="text-none white--text font-weight-bold"
+                color="orange darken-1"
+                :loading="loading"
+                small
+              >
+                Run (Ctrl + R)
+              </v-btn>
+            </v-sheet>
             <codemirror
               @cursorActivity="highlight"
               v-model="code"
@@ -34,7 +131,7 @@
               class="text-body-2"
             />
             <v-sheet
-              class="d-flex white--text px-3 py-1 text-body-2"
+              class="d-flex white--text px-3 py-1 text-body-2 rounded-b-lg"
               color="rgb(78,78,78)"
             >
               <v-spacer></v-spacer>
@@ -74,8 +171,8 @@
             </v-sheet>
           </div>
         </v-col>
-        <v-col cols="12" md="5">
-          <v-simple-table height="400">
+        <v-col v-if="showLexical" cols="12" md="5">
+          <v-simple-table height="480">
             <template #default>
               <thead>
                 <tr>
@@ -110,14 +207,6 @@
                   <div class="pa-5 text-body-1">
                     <div v-if="loading" class="d-flex justify-center">
                       Building ...
-                    </div>
-                    <div v-else class="d-flex justify-center">
-                      <div v-if="!executedOnce">
-                        <v-btn @click="execute" class="text-none">
-                          <v-icon v-text="'fa-play'" size="12" class="mr-4" />
-                          Run the analyzer
-                        </v-btn>
-                      </div>
                     </div>
                   </div>
                 </td>
@@ -199,15 +288,48 @@
           </v-simple-table>
         </v-card>
       </div>
-      <v-snackbar v-model="saved" timeout="3000" top right close
-        >Saved</v-snackbar
-      >
+      <v-snackbar v-model="saved" timeout="1000" top close>
+        <v-icon v-text="'fa-save'" size="18" left />
+        Saved
+      </v-snackbar>
+      <v-dialog :value="showDownload" width="500" persistent>
+        <v-card class="pa-8">
+          <div>
+            <span class="text-h5 font-weight-bold">
+              Download Code
+            </span>
+            <p class="text-body-1 mt-3">
+              Enter the filename below:
+            </p>
+            <v-text-field
+              filled
+              hide-details
+              dense
+              suffix=".myth"
+              color="amber darken-2"
+              v-model="downloadFileName"
+              placeholder="Untitled"
+            ></v-text-field>
+            <div class="mt-5">
+              <v-btn @click="download" color="success">
+                <v-icon v-text="'fa-download'" size="14" left />
+                Download
+              </v-btn>
+              <v-btn @click="closeDownloadModal" class="ml-3" text outlined>
+                Cancel
+              </v-btn>
+            </div>
+          </div>
+        </v-card>
+      </v-dialog>
     </v-container>
   </v-app>
 </template>
 
 <script>
 import { codemirror, CodeMirror } from "vue-codemirror";
+import { saveAs } from "file-saver";
+
 require("codemirror/addon/mode/simple.js");
 
 import "codemirror/lib/codemirror.css";
@@ -257,6 +379,7 @@ export default {
   data() {
     const self = this;
     return {
+      mythosFiles: null,
       code: "",
       stringifyCode: "",
       loading: false,
@@ -287,6 +410,7 @@ export default {
         mode: "mythos",
         lineNumbers: true,
         line: true,
+        tabSize: 2,
         autofocus: true,
         lineWiseCopyCut: true,
         autoCloseBrackets: {
@@ -301,8 +425,17 @@ export default {
           "Ctrl-S": function() {
             self.saveChanges();
           },
+          "Ctrl-O": function() {
+            self.open();
+          },
           "Ctrl-R": function() {
             self.execute();
+          },
+          "Ctrl+N": function() {
+            self.newCode;
+          },
+          Tab: function(cm) {
+            cm.replaceSelection("  ", "end");
           }
         }
       },
@@ -320,7 +453,11 @@ export default {
         syntax: []
       },
       selectedTab: 0,
-      tabs: ["lexical", "syntax"]
+      tabs: ["lexical", "syntax"],
+      showLexical: false,
+      editName: false,
+      showDownload: false,
+      downloadFileName: ""
     };
   },
   computed: {
@@ -330,6 +467,10 @@ export default {
     }
   },
   methods: {
+    newCode() {
+      this.code = "";
+      this.saveChanges(false);
+    },
     showErrorLine(line, ch) {
       this.$refs.codemirror.codemirror.focus();
       this.$refs.codemirror.codemirror.setCursor({
@@ -344,18 +485,48 @@ export default {
         line: line + 1
       });
     },
-    saveChanges() {
+    saveChanges(notif = true) {
       localStorage.setItem("code", this.code);
-      this.saved = true;
+      if (notif) this.saved = true;
+    },
+    download() {
+      const file = new File(
+        [this.code],
+        `${this.downloadFileName.trim() || "Untitled"}.myth`,
+        {
+          type: "text/plain;charset=utf-8"
+        }
+      );
+      saveAs(file);
+      this.saveChanges(false);
+      this.closeDownloadModal();
+    },
+    closeDownloadModal() {
+      this.showDownload = false;
+      this.downloadFileName = "";
+    },
+    open() {
+      this.$refs.fileUpload.click();
     },
     execute() {
       this.loading = true;
       this.lexicalData = [];
       setTimeout(async () => {
         const raw_data = this.code;
+        const splittedData = raw_data
+          .replaceAll("\n", " \n")
+          .split("\n")
+          .map(line => line.trim());
+        const lines = splittedData.indexOf(splittedData.find(Boolean));
+
+        const start_line = lines > 0 ? lines + 1 : 1;
+
         const endpoint = "http://localhost:8000/lexxer/execute/";
 
-        const response = await this.axios.post(endpoint, { raw_data });
+        const response = await this.axios.post(endpoint, {
+          raw_data,
+          start_line
+        });
 
         const { success, data = [], errors = [] } = response.data;
 
@@ -375,9 +546,43 @@ export default {
 
         if (!this.executedOnce) this.executedOnce = true;
       }, 500);
+    },
+    uploadFile() {
+      this.lexicalData = [];
+      this.tabs.forEach(tab => {
+        this.errors[tab] = [];
+      });
+      this.executedOnce = false;
+      const self = this;
+      const fr = new FileReader();
+      fr.onload = function() {
+        self.code = fr.result;
+        self.saveChanges(false);
+      };
+      fr.readAsText(self.$refs.fileUpload.files[0]);
     }
   },
+  watch: {
+    downloadFileName(val) {
+      const patt = new RegExp(/[~"#%&*:<>?/\\{|}]+/g);
+      const res = patt.test(val);
+      this.$nextTick(() => {
+        if (res)
+          this.downloadFileName = this.downloadFileName.substring(
+            0,
+            val.length - 1
+          );
+      });
+    }
+  },
+  filters: {
+    truncate: function(value) {
+      const [name, type] = value.split(".");
+      if (name.length <= 24) return value;
 
+      return `${name.substring(0, 24)}....${type}`;
+    }
+  },
   created() {
     this.code = localStorage.getItem("code") || "";
   }
@@ -385,6 +590,9 @@ export default {
 </script>
 
 <style>
+.CodeMirror {
+  height: 400px;
+}
 @-webkit-keyframes rotating /* Safari and Chrome */ {
   from {
     -webkit-transform: rotate(0deg);
