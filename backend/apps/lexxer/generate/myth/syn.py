@@ -16,7 +16,7 @@ class MythSyntax:
     start = 'program'
 
     def p_program(self, p):
-        '''program : global OLYMPUS OPCOLUMN statement CLCOLUMN'''
+        '''program : global OLYMPUS OPCOLUMN body CLCOLUMN'''
     
     def p_global(self, p):
         '''global : pandora global
@@ -25,7 +25,7 @@ class MythSyntax:
                   | declaration global
                   | SEMICOLON global
                   | empty'''
-    
+
     # ID
     def p_dataType(self, p):
         '''dataType : SONG
@@ -40,23 +40,34 @@ class MythSyntax:
         '''arrayChestQuestOption : arrayIndex chestArray
                                  | questCall'''
 
+
     def p_extraId(self, p):
         '''extraId : COMMA ID init extraId
                    | empty'''
+
+    def p_body(self, p):
+        '''body : statement
+                | empty'''
+
+    def p_declaration(self, p):
+        '''declaration : SONG ID init extraId SEMICOLON
+                       | GOLD ID init extraId SEMICOLON
+                       | FATE ID init extraId SEMICOLON
+                       | SILVER ID init extraId SEMICOLON
+                       | ID ID init extraId SEMICOLON'''
 
     def p_init(self, p):
         '''init : ASSIGN valueExpression
                 | OPBRACK valueExpression CLBRACK arrayIndex arrayContinue
                 | empty'''
 
-    def p_declaration(self, p):
-        '''declaration : dataType ID init extraId'''
 
     def p_value(self, p):
         '''value : TEXT
                  | NUM
                  | BOOL
                  | NONE
+                 | questCall
                  | id'''
 
     def p_parameter(self, p):
@@ -107,8 +118,10 @@ class MythSyntax:
                       | logicalExpression
                       | empty'''
 
+                               
     def p_valueExpression(self, p):
         '''valueExpression : OPPAR valueExpression CLPAR
+                           | unaryOP valueExpression
                            | unaryOP value expression'''
 
     def p_assignExpression(self, p):
@@ -212,7 +225,8 @@ class MythSyntax:
         '''prophecy : PROPHECY OPPAR valueExpression CLPAR OPCOLUMN loopBody CLCOLUMN'''
 
     def p_head(self, p):
-        '''head : HEAD OPPAR valueExpression CLPAR COLON statement chop head'''
+        '''head : HEAD OPPAR valueExpression CLPAR COLON statement chop head
+                | empty'''
 
 
     def p_chop(self, p):
@@ -338,17 +352,17 @@ class MythSyntax:
     # Statement
 
     def p_statement(self, p):
-        '''statement : conditionalStatement statement
-                     | iterationStatement statement
-                     | singleStatement statement
-                     | empty'''
+        '''statement : conditionalStatement body
+                     | iterationStatement body
+                     | singleStatement body'''
 
     def p_singleStatement(self, p):
         '''singleStatement : pandora
-                           | declaration
+                           | declaration 
                            | inputOutput
                            | assignExpression
                            | questCall SEMICOLON
+                           | valueExpression SEMICOLON
                            | SEMICOLON'''
 
     def p_conditionalStatement(self, p):
@@ -362,7 +376,7 @@ class MythSyntax:
 
     def p_inputOutput(self, p):
         '''inputOutput : OFFER OPPAR id CLPAR SEMICOLON
-                       | ECHO OPPAR valueExpression CLPAR'''
+                       | ECHO OPPAR valueExpression CLPAR SEMICOLON'''
     
     def p_trial(self, p):
         '''trial : TRIAL OPPAR valueExpression CLPAR OPCOLUMN statement CLCOLUMN nextTrial endTrial'''
@@ -381,6 +395,10 @@ class MythSyntax:
         '''cases : head slain
                  | empty'''
     
+    def p_loopBody(self, p):
+        '''loopBody : loopStatement breaker loopBody
+                    | empty'''
+
     def p_loopStatement(self, p):
         '''loopStatement : singleStatement
                          | loopTrial
@@ -388,10 +406,6 @@ class MythSyntax:
                          | iterationStatement
                          | empty'''
     
-    def p_loopBody(self, p):
-        '''loopBody : loopStatement breaker loopBody
-                    | empty'''
-
     def p_loopTrial(self, p):
         '''loopTrial : TRIAL OPPAR valueExpression CLPAR OPCOLUMN loopBody CLCOLUMN loopNextTrial loopEndTrial'''
 
