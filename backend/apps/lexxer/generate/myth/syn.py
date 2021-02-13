@@ -16,103 +16,115 @@ class MythSyntax:
     start = 'program'
 
     def p_program(self, p):
-        '''program : global OLYMPUS OPCOLUMN body CLCOLUMN'''
-
-    def p_program_global_error(self, p):
-        '''program : error OLYMPUS OPCOLUMN body CLCOLUMN'''
-        self.append_error(f'Syntax error at {p[1]} BEFORE OLYMPUS')
-
-    def p_program_main_error(self, p):
-        '''program : global OLYMPUS OPCOLUMN error CLCOLUMN'''
-        self.append_error(f'Syntax error at {p[4].char_line} {p.lexpos(4)} BEFORE CLCOLUMN')
-
+        '''program : global OLYMPUS OPCOLUMN statement CLCOLUMN'''
+    
     def p_global(self, p):
         '''global : pandora global
                   | chest global
                   | quest global
                   | declaration global
+                  | SEMICOLON global
                   | empty'''
+    
+    # ID
+    def p_dataType(self, p):
+        '''dataType : SONG
+                    | GOLD
+                    | SILVER
+                    | FATE'''
 
-    def p_body(self, p):
-        '''body : statement
+    def p_id(self, p): 
+        '''id : ID arrayChestQuestOption'''
+
+    def p_arrayChestQuestOption(self, p):
+        '''arrayChestQuestOption : arrayIndex chestArray
+                                 | questCall'''
+
+    def p_extraId(self, p):
+        '''extraId : COMMA ID init extraId
+                   | empty'''
+
+    def p_init(self, p):
+        '''init : ASSIGN valueExpression
+                | OPBRACK valueExpression CLBRACK arrayIndex arrayContinue
                 | empty'''
 
-    # def p_body(self, p):
-    #     '''body : error'''
+    def p_declaration(self, p):
+        '''declaration : dataType ID init extraId'''
 
-
-    def p_statement(self, p):
-        '''statement : chest body
-                     | quest body
-                     | declaration body
-                     | pandora body
-                     | inputOutput body
-                     | trial body
-                     | hydra body
-                     | chrono body
-                     | hermes body
-                     | prophecy body
-                     | questCall body
-                     | varOperations body
-                     | empty'''
-
-
-    # missing CHESTID = ID ??
-    def p_dataType(self, p):
-        '''dataType :  SONG
-                     | FATE
-                     | GOLD
-                     | SILVER
-                     | ID'''
-
-    # value
     def p_value(self, p):
         '''value : TEXT
                  | NUM
                  | BOOL
                  | NONE
-                 | ID
-                 | questCall
-                 | chestAccess'''
+                 | id'''
 
-    def p_valueExpr(self, p):
-        '''valueExpr : OPPAR valueExpr CLPAR
-                     | unaryOp value expression'''
+    def p_parameter(self, p):
+        '''parameter : dataType ID arrayInit parameterContinue
+                     | empty'''
+
+    def p_parameterContinue(self, p):
+        '''parameterContinue : COMMA parameter
+                             | empty'''
 
 
-    # expression
-    # MAYBE THERE IS ONE MORE OPTION NA MERON ()
+    # Array
+
+    def p_arrayIndex(self, p):
+        '''arrayIndex : OPBRACK valueExpression CLBRACK arrayIndex
+                      | empty'''
+
+    def p_arrayContinue(self, p):
+        '''arrayContinue : ASSIGN OPCURL arrayValue CLCURL
+                         | empty'''
+
+    def p_arrayInit(self, p):
+        '''arrayInit : OPBRACK CLBRACK arrayInit
+                     | empty'''
+
+    def p_arrayValue(self, p):
+        '''arrayValue : OPCURL valueExpression extraArrayValue CLCURL extraMemoryArrayValue
+                      | valueExpression extraArrayValue
+                      | empty'''
+
+    def p_extraArrayValue(self, p):
+        '''extraArrayValue : COMMA valueExpression extraArrayValue
+                           | empty'''
+    
+    def p_extraMemoryArrayValue(self, p):
+        '''extraMemoryArrayValue : COMMA OPCURL valueExpression extraArrayValue CLCURL extraMemoryArrayValue
+                                 | empty'''
+
+    # Array
+    
+    
+
+    # Expression
+
     def p_expression(self, p):
-        '''expression : OPPAR expression CLPAR
-                      | arithmeticExpression
+        '''expression : arithmeticExpression
                       | relationalExpression
                       | logicalExpression
                       | empty'''
 
-    def p_expression_error(self, p):
-        '''expression : OPPAR error CLPAR'''
-        raise Exception(list(p))
+    def p_valueExpression(self, p):
+        '''valueExpression : OPPAR valueExpression CLPAR
+                           | unaryOP value expression'''
 
-    def p_logicalExpression(self, p):
-        '''logicalExpression : logicalOP valueExpr'''
-
-    def p_logicalOP(self, p):
-        '''logicalOP : AND_OP
-                     | OR_OP'''
-
-    def p_relationalExpression(self, p):
-        '''relationalExpression : relationalOP valueExpr'''
-
-    def p_relationalOP(self, p):
-        '''relationalOP : EQ_OP
-                        | GT_OP
-                        | GTE_OP
-                        | LT_OP
-                        | LTE_OP
-                        | NE_OP'''
+    def p_assignExpression(self, p):
+        '''assignExpression : id assignOP valueExpression SEMICOLON'''
+    
+    def p_assignOP(self, p):
+        '''assignOP : ASSIGN
+                    | ADD_ASSIGN
+                    | SUB_ASSIGN
+                    | MUL_ASSIGN
+                    | DIV_ASSIGN
+                    | MOD_ASSIGN
+                    | POW_ASSIGN'''
 
     def p_arithmeticExpression(self, p):
-        '''arithmeticExpression : arithmeticOP valueExpr'''
+        '''arithmeticExpression : arithmeticOP valueExpression'''
 
     def p_arithmeticOP(self, p):
         '''arithmeticOP : PLUS_OP
@@ -122,214 +134,289 @@ class MythSyntax:
                         | MOD_OP
                         | POW_OP'''
 
-    # new MINUS  , unaryLocialOP before
-    def p_unaryOp(self, p):
-        '''unaryOp : NOT_OP unaryLoop
-                   | MINUS_OP unaryLoop
+    def p_logicalExpression(self, p):
+        '''logicalExpression : logicalOP valueExpression'''
+
+    def p_logicalOP(self, p):
+        '''logicalOP : AND_OP
+                     | OR_OP'''
+
+    def p_relationalExpression(self, p):
+        '''relationalExpression : relationalOP valueExpression'''
+    
+    def p_relationalOP(self, p):
+        '''relationalOP : EQ_OP
+                        | GT_OP
+                        | GTE_OP
+                        | LT_OP
+                        | LTE_OP
+                        | NE_OP'''
+    
+    def p_unaryOP(self, p):
+        '''unaryOP : NOT_OP unaryOP
+                   | MINUS_OP unaryOP
                    | empty'''
 
-    # weird?
-    def p_unaryLoop(self, p):
-        '''unaryLoop : unaryOp'''
-
-    def p_assignOp(self, p):
-        '''assignOp : ASSIGN
-                    | ADD_ASSIGN
-                    | SUB_ASSIGN
-                    | MUL_ASSIGN
-                    | DIV_ASSIGN
-                    | MOD_ASSIGN
-                    | POW_ASSIGN'''
-
-    # WALANG GAMIT ???
-    def p_chestAccess(self, p):
-        '''chestAccess : ID DOT ID'''
+    # Expression
 
 
-    def p_varOperations(self, p):
-        '''varOperations : ID assignOp valueExpr SEMICOLON'''
 
-    # declaration
-    def p_declaration(self, p):
-        '''declaration : dataType ID init extraId SEMICOLON'''
+    # Chest
 
-
-    # id and array
-    def p_init(self, p):
-        '''init : ASSIGN valueExpr
-                | OPBRACK arraySize CLBRACK extraArraySizeDeclaration arrayContinue
-                | empty'''
-
-    # array
-    def p_arraySize(self, p):
-        '''arraySize : valueExpr
-                     | ID'''
-
-    def p_extraArraySizeDeclaration(self, p):
-        '''extraArraySizeDeclaration : OPBRACK arraySize CLBRACK extraArraySizeDeclaration
-                                     | empty'''
-
-    def p_arrayContinue(self, p):
-        '''arrayContinue : ASSIGN OPCURL arrayValue CLCURL
-                         | empty'''
-
-    def p_arrayValue(self, p):
-        '''arrayValue : OPCURL valueExpr extraArrayValue CLCURL extraMemoryArrayValue
-                      | valueExpr extraArrayValue
-                      | empty'''
-
-    def p_extraArrayValue(self, p):
-        '''extraArrayValue : COMMA valueExpr extraArrayValue
-                           | empty'''
-
-    def p_extraMemoryArrayValue(self, p):
-        '''extraMemoryArrayValue : COMMA OPCURL valueExpr extraArrayValue CLCURL extraMemoryArrayValue
-                                 | empty'''
-
-    # id
-    def p_extraId(self, p):
-        '''extraId : COMMA ID init extraId
-                   | empty'''
-
-
-    # CHRONO
-    def p_chrono(self, p):
-        '''chrono : CHRONO OPPAR chronoIterable forStatement CLPAR OPCOLUMN loopBody CLCOLUMN'''
-
-    def p_chronoIterable(self, p):
-        '''chronoIterable : chronoDataType ID
-                          | ID'''
-
-    def p_chronoDataType(self, p):
-        '''chronoDataType : GOLD
-                          | SILVER'''
-
-    def p_forStatement(self, p):
-        '''forStatement : past future day'''
-
-    def p_past(self, p):
-        '''past : PAST valueExpr'''
-
-    def p_future(self, p):
-        '''future : FUTURE valueExpr'''
-
-    def p_day(self, p):
-        '''day : DAY valueExpr
-               | empty'''
-
-    # statement after breaker?
-    def p_loopBody(self, p):
-        '''loopBody : statement breaker
-                    | empty'''
-
-    def p_breaker(self, p):
-        '''breaker : stop
-                   | skip'''
-
-    def p_stop(self, p):
-        '''stop : STOP SEMICOLON
-                | empty'''
-
-    def p_skip(self, p):
-        '''skip : SKIP SEMICOLON
-                | empty'''
-
-    # HERMES
-    def p_hermes(self, p):
-        '''hermes : HERMES OPPAR forEachStatement CLPAR OPCOLUMN loopBody CLCOLUMN'''
-
-    ## ???
-    def p_forEachStatement(self, p):
-        '''forEachStatement : dataType ID IN value'''
-
-    # PROPHECY
-    def p_prophecy(self, p):
-        '''prophecy : PROPHECY OPPAR valueExpr CLPAR OPCOLUMN loopBody CLCOLUMN'''
-
-    # TRIAL
-    def p_trial(self, p):
-        '''trial : TRIAL OPPAR valueExpr CLPAR OPCOLUMN statement CLCOLUMN nextTrial'''
-
-    def p_nextTrial(self, p):
-        '''nextTrial : RETRIAL OPPAR valueExpr CLPAR OPCOLUMN statement CLCOLUMN nextTrial
-                     | VERDICT OPCOLUMN statement CLCOLUMN
-                     | empty'''
-
-    # HYDRA
-    def p_hydra(self, p):
-        '''hydra : HYDRA OPPAR valueExpr CLPAR OPCOLUMN cases CLCOLUMN'''
-
-    def p_cases(self, p):
-        '''cases : head slain
-                 | empty'''
-
-    def p_head(self, p):
-        '''head : HEAD OPPAR valueExpr CLPAR COLON body chop head
-                | empty'''
-
-    def p_chop(self, p):
-        '''chop : CHOP SEMICOLON
-                | empty'''
-
-    def p_slain(self, p):
-        '''slain : SLAIN COLON body
-                 | empty'''
-
-    # INPUT OUPUT
-    def p_inputOutput(self, p):
-        '''inputOutput : OFFER OPPAR ID CLPAR SEMICOLON
-                       | ECHO OPPAR valueExpr CLPAR SEMICOLON'''
-
-    # PANDORA
-    def p_pandora(self, p):
-        '''pandora : PANDORA declaration'''
-
-    # CHEST
     def p_chest(self, p):
         '''chest : CHEST ID OPCOLUMN chestBody CLCOLUMN'''
+
+    def p_chestArray(self, p):
+        '''chestArray : DOT id chestArray
+                      | empty'''
 
     def p_chestBody(self, p):
         '''chestBody : pandora chestBody
                      | declaration chestBody
                      | empty'''
 
-    # QUEST call
+    # Chest
+
+
+
+    # Reserved Words
+
+    def p_pandora(self, p):
+        '''pandora : PANDORA declaration'''
+
+    def p_slain(self, p):
+        '''slain : SLAIN COLON statement'''
+
+    def p_breaker(self, p):
+        '''breaker : SKIP SEMICOLON
+                   | STOP SEMICOLON
+                   | empty'''
+
+    def p_chrono(self, p):
+        '''chrono : CHRONO OPPAR loopValueContainer past future day CLPAR OPCOLUMN loopBody CLCOLUMN'''
+    
+    def p_past(self, p):
+        '''past : PAST valueExpression'''
+
+    def p_future(self, p):
+        '''future : FUTURE valueExpression'''
+
+    def p_day(self, p):
+        '''day : DAY valueExpression
+               | empty'''
+    
+    def p_hermes(self, p):
+        '''hermes : HERMES OPPAR loopValueContainer IN value CLPAR OPCOLUMN loopBody CLCOLUMN'''
+    
+    def p_prophecy(self, p):
+        '''prophecy : PROPHECY OPPAR valueExpression CLPAR OPCOLUMN loopBody CLCOLUMN'''
+
+    def p_head(self, p):
+        '''head : HEAD OPPAR valueExpression CLPAR COLON statement chop head'''
+
+
+    def p_chop(self, p):
+        '''chop : CHOP SEMICOLON
+                | empty'''
+
+
+    # Reserved Words
+
+    # QUEST
+
+    def p_quest(self, p):
+        '''quest : QUEST ID OPPAR parameter CLPAR questReturn OPCOLUMN questStatement CLCOLUMN'''
+
+    def p_questReturn(self, p):
+        '''questReturn : REWARD dataType
+                       | empty'''    
+    
+    def p_questParamCall(self, p):
+        '''questParamCall : valueExpression questCallContinue
+                          | empty'''
+
+    def p_questCallContinue(self, p):
+        '''questCallContinue : COMMA questParamCall
+                             | empty'''
+
+    def p_questStatement(self, p):
+        '''questStatement : BESTOW valueExpression SEMICOLON questStatement
+                          | questTrial questStatement 
+                          | questIterationStatement questStatement
+                          | questHydra questStatement
+                          | singleStatement questStatement
+                          | empty'''
+    
+    def p_questIterationStatement(self, p):
+        '''questIterationStatement : questChrono
+                                   | questProphecy
+                                   | questHermes'''
+    
+    def p_questTrial(self, p):
+        '''questTrial : TRIAL OPPAR valueExpression CLPAR OPCOLUMN questStatement CLCOLUMN questNextTrial questEndTrial'''
+
+    def p_questNextTrial(self, p):
+        '''questNextTrial : RETRIAL OPPAR valueExpression CLPAR OPCOLUMN questStatement CLCOLUMN questNextTrial
+                          | empty'''
+
+    def p_questEndTrial(self, p):
+        '''questEndTrial : VERDICT OPCOLUMN questStatement CLCOLUMN
+                         | empty'''
+    
+    def p_questHydra(self, p):
+        '''questHydra : HYDRA OPPAR id CLPAR OPCOLUMN questCases CLCOLUMN'''
+
+    def p_questCases(self, p):
+        '''questCases : questHead questSlain
+                      | empty'''
+    
+    def p_questHead(self, p):
+        '''questHead : HEAD OPPAR valueExpression CLPAR COLON questStatement chop questHead
+                     | empty'''
+    
+    def p_questSlain(self, p):
+        '''questSlain : SLAIN COLON questStatement
+                      | empty'''
+
+    def p_questChrono(self, p):
+        '''questChrono : CHRONO OPPAR loopValueContainer past future day CLPAR OPCOLUMN questLoopBody CLCOLUMN'''
+    
+    def p_loopValueContainer(self, p):
+        '''loopValueContainer : dataType ID
+                              | id'''
+    
+    def p_questLoopBody(self, p):
+        '''questLoopBody : questLoopStatement breaker questLoopBody
+                         | empty'''
+    
+    def p_questProphecy(self, p):
+        '''questProphecy : PROPHECY OPPAR valueExpression CLPAR OPCOLUMN questLoopBody CLCOLUMN'''
+
+    def p_questHermes(self, p):
+        '''questHermes : HERMES OPPAR loopValueContainer IN value CLPAR OPCOLUMN questLoopBody CLCOLUMN'''
+
+    def p_questForTrial(self, p):
+        '''questForTrial : TRIAL OPPAR valueExpression CLPAR OPCOLUMN questLoopBody CLCOLUMN questForNextTrial questForEndTrial'''
+    
+    def p_questForNextTrial(self, p):
+        '''questForNextTrial : RETRIAL OPPAR valueExpression CLPAR OPCOLUMN questLoopBody CLCOLUMN questForNextTrial
+                             | empty'''
+
+    def p_questForEndTrial(self, p):
+        '''questForEndTrial : VERDICT OPCOLUMN questLoopBody CLCOLUMN 
+                            | empty'''
+
+    def p_questForHydra(self, p):
+        '''questForHydra : HYDRA OPPAR id CLPAR OPCOLUMN questForCases CLCOLUMN'''
+    
+    def p_questForCases(self, p):
+        '''questForCases : questForHead questForSlain
+                         | empty'''
+
+    def p_questForHead(self, p):
+        '''questForHead : HEAD OPPAR valueExpression CLPAR COLON questLoopBody chop questForHead
+                        | empty'''
+
+    def p_questForSlain(self, p):
+        '''questForSlain : SLAIN COLON questLoopBody
+                         | empty'''
+
+    def p_questLoopStatement(self, p):
+        '''questLoopStatement : singleStatement
+                              | questForTrial
+                              | questForHydra
+                              | questIterationStatement
+                              | BESTOW valueExpression SEMICOLON 
+                              | empty'''
+    
     def p_questCall(self, p):
         '''questCall : ID OPPAR questParamCall CLPAR'''
 
-    def p_questParamCall(self, p):
-        '''questParamCall : valueExpr questCallCont
-                          | questCall
-                          | empty'''
-
-    def p_questCallCont(self, p):
-        '''questCallCont : COMMA questParamCall'''
-
     # QUEST
-    def p_quest(self, p):
-        '''quest : QUEST questBody'''
 
-    def p_questBody(self, p):
-        '''questBody : ID OPPAR parameter CLPAR questVoidOrNot'''
 
-    def p_questVoidOrNot(self, p):
-        '''questVoidOrNot : REWARD dataType OPCOLUMN body BESTOW returnValue SEMICOLON CLCOLUMN
-                            | OPCOLUMN body CLCOLUMN'''
+    # Statement
 
-    def p_parameter(self, p):
-        '''parameter : dataType ID arrayInit parameterCont
+    def p_statement(self, p):
+        '''statement : conditionalStatement statement
+                     | iterationStatement statement
+                     | singleStatement statement
                      | empty'''
 
-    def p_arrayInit(self, p):
-        '''arrayInit : OPBRACK CLBRACK arrayInit
-                       | empty'''
+    def p_singleStatement(self, p):
+        '''singleStatement : pandora
+                           | declaration
+                           | inputOutput
+                           | assignExpression
+                           | questCall SEMICOLON
+                           | SEMICOLON'''
 
-    def p_parameterCont(self, p):
-        '''parameterCont : COMMA parameter
-                          | empty'''
+    def p_conditionalStatement(self, p):
+        '''conditionalStatement : trial 
+                                | hydra'''
+    
+    def p_iterationStatement(self, p):
+        '''iterationStatement : chrono
+                              | hermes
+                              | prophecy'''
 
-    def p_returnValue(self, p):
-        '''returnValue : valueExpr'''
+    def p_inputOutput(self, p):
+        '''inputOutput : OFFER OPPAR id CLPAR SEMICOLON
+                       | ECHO OPPAR valueExpression CLPAR'''
+    
+    def p_trial(self, p):
+        '''trial : TRIAL OPPAR valueExpression CLPAR OPCOLUMN statement CLCOLUMN nextTrial endTrial'''
+
+    def p_nextTrial(self, p):
+        '''nextTrial : RETRIAL OPPAR valueExpression CLPAR OPCOLUMN statement CLCOLUMN nextTrial
+                     | empty'''
+    
+    def p_endTrial(self, p):
+        '''endTrial : VERDICT OPCOLUMN statement CLCOLUMN'''
+    
+    def p_hydra(self, p):
+        '''hydra : HYDRA OPPAR id CLPAR OPCOLUMN cases CLCOLUMN'''
+
+    def p_cases(self, p):
+        '''cases : head slain
+                 | empty'''
+    
+    def p_loopStatement(self, p):
+        '''loopStatement : singleStatement
+                         | loopTrial
+                         | loopHydra
+                         | iterationStatement
+                         | empty'''
+    
+    def p_loopBody(self, p):
+        '''loopBody : loopStatement breaker loopBody
+                    | empty'''
+
+    def p_loopTrial(self, p):
+        '''loopTrial : TRIAL OPPAR valueExpression CLPAR OPCOLUMN loopBody CLCOLUMN loopNextTrial loopEndTrial'''
+
+    def p_loopNextTrial(self, p):
+        '''loopNextTrial : RETRIAL OPPAR valueExpression CLPAR OPCOLUMN loopBody CLCOLUMN loopNextTrial
+                         | empty'''
+
+    def p_loopEndTrial(self, p):
+        '''loopEndTrial : VERDICT OPCOLUMN loopBody CLCOLUMN
+                        | empty'''       
+
+    def p_loopHdyra(self, p):
+        '''loopHydra : HYDRA OPPAR id CLPAR OPCOLUMN loopCases CLCOLUMN'''  
+
+    def p_loopCases(self, p):
+        '''loopCases : loopHead loopSlain
+                     | empty'''   
+    
+    def p_loopHead(self, p):
+        '''loopHead :  HEAD OPPAR valueExpression CLPAR COLON loopBody chop loopHead
+                    | empty'''
+    
+    def p_loopSlain(self, p):
+        '''loopSlain : SLAIN COLON loopBody
+                     | empty'''
 
     def p_empty(self, p):
         'empty :'
