@@ -317,12 +317,12 @@ class MythLexer:
         return t
 
     def t_NUM(self, t):
-        # r'^0|[1-9][0-9]{0,8}\.?[\d]{0,4}'
         r'(0|[1-9][0-9]{0,8})(\.[0-9]{1,5})?'
         t.type = 'NUM'
         t.char_line = self.find_column(t)
         t.description = 'num-literal'
         t.value = t.value
+        # r'^0|[1-9][0-9]{0,8}\.?[\d]{0,4}'
         # ^(?=.\d{0,8}(|(\.\d{1,5}))$)(0$|[1-9][0-9]*)([.][\d]+)?
         return t
 
@@ -347,14 +347,14 @@ class MythLexer:
         char_line = self.find_column(t)
 
         self.append_error(
-            f'Illegal character {t.value[0]}',
+            f'Character not found {t.value[0]}',
                 code='lexical', line=t.lexer.lineno, char_line=char_line)
-        print(f"Line {t.lexer.lineno} char_line {char_line} Illegal character {t.value[0]}")
+        # print(f"Line {t.lexer.lineno} char_line {char_line} Illegal character {t.value[0]}")
         t.lexer.skip(1)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, debug=False, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.build(**kwargs)
+        self.build(debug, **kwargs)
 
     def find_column(self, token):
         line_start = self.data.rfind('\n', 0, token.lexpos) + 1
@@ -366,8 +366,8 @@ class MythLexer:
         self.ERROR_LIST.append(LexicalValidationError(_(message),
             code=code, line=line, char_line=char_line))
 
-    def build(self,**kwargs):
-        self.lexer = lex.lex(module=self, **kwargs)
+    def build(self, debug=False, **kwargs):
+        self.lexer = lex.lex(debug=debug, module=self, **kwargs)
 
     def input(self, data="", run=False):
         # save data and clear at first
@@ -388,7 +388,6 @@ class MythLexer:
 
 # mini class
 def parse(string=""):
-    if not string: return []
     mythLex = MythLexer()
     mythLex.input(string, run=True)
     if mythLex.ERROR_LIST: raise LexicalValidationError(mythLex.ERROR_LIST)

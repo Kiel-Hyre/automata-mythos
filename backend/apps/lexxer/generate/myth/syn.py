@@ -18,6 +18,14 @@ class MythSyntax:
     def p_program(self, p):
         '''program : global OLYMPUS OPCOLUMN body CLCOLUMN'''
 
+    def p_program_global_error(self, p):
+        '''program : error OLYMPUS OPCOLUMN body CLCOLUMN'''
+        self.append_error(f'Syntax error at {p[1]} BEFORE OLYMPUS')
+
+    def p_program_main_error(self, p):
+        '''program : global OLYMPUS OPCOLUMN error CLCOLUMN'''
+        self.append_error(f'Syntax error at {p[4].char_line} {p.lexpos(4)} BEFORE CLCOLUMN')
+
     def p_global(self, p):
         '''global : pandora global
                   | chest global
@@ -28,6 +36,10 @@ class MythSyntax:
     def p_body(self, p):
         '''body : statement
                 | empty'''
+
+    # def p_body(self, p):
+    #     '''body : error'''
+
 
     def p_statement(self, p):
         '''statement : chest body
@@ -76,6 +88,10 @@ class MythSyntax:
                       | relationalExpression
                       | logicalExpression
                       | empty'''
+
+    def p_expression_error(self, p):
+        '''expression : OPPAR error CLPAR'''
+        raise Exception(list(p))
 
     def p_logicalExpression(self, p):
         '''logicalExpression : logicalOP valueExpr'''
@@ -239,7 +255,6 @@ class MythSyntax:
                      | VERDICT OPCOLUMN statement CLCOLUMN
                      | empty'''
 
-
     # HYDRA
     def p_hydra(self, p):
         '''hydra : HYDRA OPPAR valueExpr CLPAR OPCOLUMN cases CLCOLUMN'''
@@ -277,7 +292,6 @@ class MythSyntax:
         '''chestBody : pandora chestBody
                      | declaration chestBody
                      | empty'''
-
 
     # QUEST call
     def p_questCall(self, p):
@@ -319,31 +333,35 @@ class MythSyntax:
 
     def p_empty(self, p):
         'empty :'
+        print('Empty')
         pass
 
     def p_error(self, p):
         # None EOF
-        if p is None: self.append_error(f"End Of File : Tip! Put a main block: OLYMPUS")
-        else: self.append_error(f"Syntax error at {p.lineno!r}:{p.char_line} {p.value!r}")
+        if p is None:
+            self.append_error(f"End Of File : Tip! Put a main block: OLYMPUS")
+            return
+        else: self.append_error(
+            message=f"Syntax error at {p.value!r}", line=p.lineno, char_line=p.char_line)
         # self.parser.errok() # ?? disable if want only one instance of this RECOVERY MODE
 
-    def __init__(self):
-        self.lexer = self.lexer()
-        self.parser = yacc.yacc(start=self.start, module=self, debug=True)
+    def __init__(self,lex_debug=False, debug=False):
+        self.lexer = self.lexer(debug=lex_debug)
+        self.parser = yacc.yacc(start=self.start, module=self, debug=debug)
         self.ERROR_LIST = []
 
-    def append_error(self, message):
-        self.ERROR_LIST.append(SyntaxValidationError(message))
+    def append_error(self, message="", code="syntax", params="", line=0, char_line=0):
+        self.ERROR_LIST.append(SyntaxValidationError(message, code, params, line, char_line))
 
     def test(self, data):
         self.lexer.input(data)
         result = self.parser.parse(data, lexer=self.lexer.lexer, tracking=True)
+        if self.ERROR_LIST: raise SyntaxValidationError(self.ERROR_LIST)
         return result
 
 def parse(data=""):
-    syntax = MythSyntax()
+    syntax = MythSyntax(lex_debug=True, debug=True)
     syntax.test(data)
-    if syntax.ERROR_LIST: raise SyntaxValidationError(syntax.ERROR_LIST)
     return True
 
 
