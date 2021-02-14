@@ -17,6 +17,7 @@ import "codemirror/addon/search/searchcursor";
 import "codemirror/addon/search/search";
 import "codemirror/addon/scroll/simplescrollbars";
 import "codemirror/addon/display/placeholder";
+import "codemirror/addon/comment/comment";
 
 CodeMirror.defineSimpleMode("mythos", {
   start: [
@@ -60,10 +61,21 @@ export default {
             { name: "Download", action: this.askFileName }
           ]
         },
-        run: {
+        edit: {
           items: [
-            { name: "Run", shortcut: "Ctrl + R", action: this.execute },
-            { name: "Toggle Lexical Table", action: this.toggleLexical }
+            {
+              name: "Toggle Comment",
+              shortcut: "Ctrl + /",
+              action: this.toggleLineComment
+            }
+          ]
+        },
+        run: {
+          items: [{ name: "Run", shortcut: "Ctrl + R", action: this.execute }]
+        },
+        view: {
+          items: [
+            { name: "Fullscreen", shortcut: "F11", action: this.setFullScreen }
           ]
         }
       },
@@ -106,6 +118,7 @@ export default {
         styleActiveLine: true,
         scrollbarStyle: "overlay",
         lint: true,
+        dragDrop: false,
         extraKeys: {
           "Ctrl-S": function() {
             self.saveChanges();
@@ -118,6 +131,16 @@ export default {
           },
           Tab: function(cm) {
             cm.replaceSelection("  ", "end");
+          },
+          "Ctrl-/": function(cm) {
+            cm.execCommand("toggleComment");
+          },
+          F11: function(cm) {
+            console.log("m");
+            cm.setOption("fullScreen", !cm.getOption("fullScreen"));
+          },
+          Esc: function(cm) {
+            cm.setOption("fullScreen", false);
           }
         }
       },
@@ -151,6 +174,9 @@ export default {
       this.showLexical = !this.showLexical;
       localStorage.setItem("showLexical", this.showLexical);
     },
+    toggleLineComment() {
+      this.$refs.codemirror.codemirror.execCommand("toggleComment");
+    },
     resetTables() {
       this.errors = [];
       this.lexical = [];
@@ -158,6 +184,11 @@ export default {
       this.$refs.codemirror.codemirror.clearHistory();
     },
     newCode() {
+      const promptResponse = confirm(
+        "Are you sure you want to create new program?"
+      );
+
+      if (!promptResponse) return;
       this.$refs.codemirror.codemirror.setValue("");
       this.resetTables();
       this.filename = "Untitled";
@@ -262,6 +293,13 @@ export default {
         self.saveChanges(false);
       };
       fr.readAsText(self.$refs.fileUpload.files[0]);
+    },
+    setFullScreen() {
+      this.$refs.codemirror.codemirror.setOption(
+        "fullScreen",
+        !this.$refs.codemirror.codemirror.getOption("fullScreen")
+      );
+      this.$refs.codemirror.codemirror.focus();
     },
     _keyListener(e) {
       if (e.key === "s" && (e.ctrlKey || e.metaKey)) {

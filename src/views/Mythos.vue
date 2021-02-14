@@ -9,7 +9,7 @@
         @change="uploadFile"
       />
       <v-row>
-        <v-col>
+        <v-col cols="12" md="7">
           <v-sheet
             color="rgb(51,51,51)"
             class="rounded-t-lg d-flex align-center py-1"
@@ -109,13 +109,7 @@
                 offset-y="5"
                 dot
               >
-                <v-icon
-                  @click.stop="toggleLexical"
-                  v-text="'fa-table'"
-                  size="16"
-                  class="ml-3"
-                  dark
-                />
+                <v-icon v-text="'fa-table'" size="16" class="ml-3" dark />
               </v-badge>
               <v-icon
                 v-if="!executedOnce || loading"
