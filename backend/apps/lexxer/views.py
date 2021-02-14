@@ -45,13 +45,22 @@ class LexxerExecuteView(APIView):
         if serializer.is_valid():
             data = serializer.validated_data
             print(data)
+
             try:
-                lexical, syntax = syn_parse(
-                data.get('raw_data',''), data.get('start_line', 1), True)
+                lexical = lex_parse(
+                    data.get('raw_data',''), data.get('start_line', 1))
             except Exception as e:
                 if hasattr(e, 'error_list'):
                     response['errors'].extend(self.ErrorSerializer(e.error_list,
-                        many=True).data)
+                    many=True).data)
+                else: raise Exception(e)
+
+            try:
+                syntax = syn_parse(data.get('raw_data',''), data.get('start_line', 1))
+            except Exception as e:
+                if hasattr(e, 'error_list'):
+                    response['errors'].extend(self.ErrorSerializer(
+                        e.error_list, many=True).data)
                 else: raise Exception(e)
 
             if not response['errors']:

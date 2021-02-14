@@ -535,15 +535,14 @@ class MythSyntax:
         self.lexer.input(data, baseline)
 
         result = self.parser.parse(data, lexer=self.lexer.lexer, tracking=True)
-        if run_lexical: self.lexer.test()
         return result
 
-def parse(data="", baseline=1, run_lexical=False):
-    syntax = MythSyntax(lex_debug=True, debug=True)
-    syntax.test(data, baseline, run_lexical)
 
-    if run_lexical:
-        if syntax.lexer.ERROR_LIST: syntax.ERROR_LIST.extend(syntax.lexer.ERROR_LIST)
+syntax = MythSyntax(lex_debug=True, debug=True)
+def parse(data="", baseline=1):
+
+    syntax.test(data, baseline)
+
     if syntax.ERROR_LIST: raise SyntaxValidationError(syntax.ERROR_LIST)
     return syntax.lexer.TOKEN_LIST, True
 
