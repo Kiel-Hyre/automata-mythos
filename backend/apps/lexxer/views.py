@@ -44,7 +44,7 @@ class LexxerExecuteView(APIView):
         response = {'success': False, 'errors':[], 'data': None}
         if serializer.is_valid():
             data = serializer.validated_data
-            print(data)
+            # print(data)
 
             try:
                 lexical = lex_parse(
