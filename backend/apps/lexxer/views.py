@@ -17,7 +17,7 @@ from .generate.myth.syn import parse as syn_parse
 # Create your views here.
 class LexxerExecuteView(APIView):
     class InputSerializer(serializers.Serializer):
-        raw_data = serializers.CharField(required=False)
+        raw_data = serializers.CharField(required=False, allow_blank=True)
         start_line = serializers.IntegerField(required=False)
 
         def __init__(self, *args, **kwargs):
