@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'whitenoise.runserver_nostatic',
     'django.contrib.staticfiles',
     'django.contrib.postgres',
     'corsheaders',
@@ -130,7 +131,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
@@ -163,60 +164,61 @@ MEDIA_URL = '/media/'
 
 import logging
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '[%(asctime)s] {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s',
+if DEBUG:
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'verbose': {
+                'format': '[%(asctime)s] {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s',
+            },
         },
-    },
-    'filters': {
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse'
+        'filters': {
+            'require_debug_false': {
+                '()': 'django.utils.log.RequireDebugFalse'
+            },
+            'require_debug_true': {
+                '()': 'django.utils.log.RequireDebugTrue'
+            },
         },
-        'require_debug_true': {
-            '()': 'django.utils.log.RequireDebugTrue'
+        'handlers': {
+            'console': {
+                'level': 'DEBUG',
+                'filters': ['require_debug_true'],
+                'class': 'logging.StreamHandler',
+                'formatter': 'verbose'
+            },
+            'default': {
+                'level': 'DEBUG',
+                'filters': ['require_debug_true'],
+                'class': 'logging.handlers.TimedRotatingFileHandler',
+                'filename': os.path.join(BASE_DIR, 'logs/debug.log'),
+                'when': 'midnight',
+                'formatter': 'verbose',
+            },
+            'info': {
+                'level': 'INFO',
+                'class': 'logging.handlers.TimedRotatingFileHandler',
+                'filename': os.path.join(BASE_DIR, 'logs/info.log'),
+                'when': 'midnight',
+                'formatter': 'verbose',
+            },
+            'error': {
+                'level': 'ERROR',
+                'class': 'logging.handlers.TimedRotatingFileHandler',
+                'filename': os.path.join(BASE_DIR, 'logs/error.log'),
+                'when': 'midnight',
+                'formatter': 'verbose',
+            },
         },
-    },
-    'handlers': {
-        'console': {
-            'level': 'DEBUG',
-            'filters': ['require_debug_true'],
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose'
+        'loggers': {
+            '': {
+                'handlers': ['console', 'default', 'info', 'error'],
+                'level': 'DEBUG' if DEBUG else 'INFO',
+                'propagate': True,
+            },
         },
-        'default': {
-            'level': 'DEBUG',
-            'filters': ['require_debug_true'],
-            'class': 'logging.handlers.TimedRotatingFileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs/debug.log'),
-            'when': 'midnight',
-            'formatter': 'verbose',
-        },
-        'info': {
-            'level': 'INFO',
-            'class': 'logging.handlers.TimedRotatingFileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs/info.log'),
-            'when': 'midnight',
-            'formatter': 'verbose',
-        },
-        'error': {
-            'level': 'ERROR',
-            'class': 'logging.handlers.TimedRotatingFileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs/error.log'),
-            'when': 'midnight',
-            'formatter': 'verbose',
-        },
-    },
-    'loggers': {
-        '': {
-            'handlers': ['console', 'default', 'info', 'error'],
-            'level': 'DEBUG' if DEBUG else 'INFO',
-            'propagate': True,
-        },
-    },
-}
+    }
 
 
 # Django REST Framework

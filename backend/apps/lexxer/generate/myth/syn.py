@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.forms import ValidationError
 from backend.apps.lexxer.generate.ply import yacc
 from .lex import (
@@ -5,6 +6,7 @@ from .lex import (
     MythLexer
 )
 
+DEBUG = settings.DEBUG
 
 class SyntaxValidationError(ValidationError):
     def __init__(self, message, code='syntax', params=None, line=0, char_line=0):
@@ -534,11 +536,17 @@ class MythSyntax:
         self.ERROR_LIST = []
         self.lexer.input(data, baseline)
 
-        result = self.parser.parse(data, lexer=self.lexer.lexer, tracking=True)
+        tracking = False
+        if DEBUG: tracking = True
+        result = self.parser.parse(data, lexer=self.lexer.lexer, tracking=False)
         return result
 
 
-syntax = MythSyntax(lex_debug=True, debug=True)
+
+syntax = None
+if DEBUG: syntax = MythSyntax(lex_debug=True, debug=True)
+else:syntax = MythSyntax()
+
 def parse(data="", baseline=1):
 
     syntax.test(data, baseline)
