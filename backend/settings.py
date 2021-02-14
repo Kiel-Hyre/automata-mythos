@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'whitenoise.runserver_nostatic',
     'django.contrib.staticfiles',
     'django.contrib.postgres',
     'corsheaders',
@@ -65,7 +66,7 @@ ROOT_URLCONF = 'backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'dist')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -125,29 +126,80 @@ USE_L10N = True
 USE_TZ = True
 
 
+# Logging
+# https://docs.python.org/3/library/logging.html
+
+import logging
+
+if DEBUG:
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'verbose': {
+                'format': '[%(asctime)s] {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s',
+            },
+        },
+        'filters': {
+            'require_debug_false': {
+                '()': 'django.utils.log.RequireDebugFalse'
+            },
+            'require_debug_true': {
+                '()': 'django.utils.log.RequireDebugTrue'
+            },
+        },
+        'handlers': {
+            'console': {
+                'level': 'DEBUG',
+                'filters': ['require_debug_true'],
+                'class': 'logging.StreamHandler',
+                'formatter': 'verbose'
+            },
+            'default': {
+                'level': 'DEBUG',
+                'filters': ['require_debug_true'],
+                'class': 'logging.handlers.TimedRotatingFileHandler',
+                'filename': os.path.join(BASE_DIR, 'logs/debug.log'),
+                'when': 'midnight',
+                'formatter': 'verbose',
+            },
+            'info': {
+                'level': 'INFO',
+                'class': 'logging.handlers.TimedRotatingFileHandler',
+                'filename': os.path.join(BASE_DIR, 'logs/info.log'),
+                'when': 'midnight',
+                'formatter': 'verbose',
+            },
+            'error': {
+                'level': 'ERROR',
+                'class': 'logging.handlers.TimedRotatingFileHandler',
+                'filename': os.path.join(BASE_DIR, 'logs/error.log'),
+                'when': 'midnight',
+                'formatter': 'verbose',
+            },
+        },
+        'loggers': {
+            '': {
+                'handlers': ['console', 'default', 'info', 'error'],
+                'level': 'DEBUG' if DEBUG else 'INFO',
+                'propagate': True,
+            },
+        },
+    }
+
+
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+STATIC_ROOT = os.path.join(BASE_DIR, 'dist', 'static')
 
 STATICFILES_DIRS = []
 
 
-# Frontend config
-# (no url)
-
-FRONTEND_CONFIG = [
-    (TEMPLATES[0]['DIRS'], os.path.join(BASE_DIR, 'dist')),
-    (STATICFILES_DIRS, os.path.join(BASE_DIR, 'dist/static')),
-]
-
-for cfg, path in FRONTEND_CONFIG:
-    if os.path.exists(path):
-        cfg.append(path)
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 
 # Media root
@@ -156,67 +208,6 @@ for cfg, path in FRONTEND_CONFIG:
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 MEDIA_URL = '/media/'
-
-
-# Logging
-# https://docs.python.org/3/library/logging.html
-
-import logging
-
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '[%(asctime)s] {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s',
-        },
-    },
-    'filters': {
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse'
-        },
-        'require_debug_true': {
-            '()': 'django.utils.log.RequireDebugTrue'
-        },
-    },
-    'handlers': {
-        'console': {
-            'level': 'DEBUG',
-            'filters': ['require_debug_true'],
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose'
-        },
-        'default': {
-            'level': 'DEBUG',
-            'filters': ['require_debug_true'],
-            'class': 'logging.handlers.TimedRotatingFileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs/debug.log'),
-            'when': 'midnight',
-            'formatter': 'verbose',
-        },
-        'info': {
-            'level': 'INFO',
-            'class': 'logging.handlers.TimedRotatingFileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs/info.log'),
-            'when': 'midnight',
-            'formatter': 'verbose',
-        },
-        'error': {
-            'level': 'ERROR',
-            'class': 'logging.handlers.TimedRotatingFileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs/error.log'),
-            'when': 'midnight',
-            'formatter': 'verbose',
-        },
-    },
-    'loggers': {
-        '': {
-            'handlers': ['console', 'default', 'info', 'error'],
-            'level': 'DEBUG' if DEBUG else 'INFO',
-            'propagate': True,
-        },
-    },
-}
 
 
 # Django REST Framework
@@ -233,8 +224,13 @@ REST_FRAMEWORK = {
 CORS_ORIGIN_ALLOW_ALL = True
 
 
+MIDDLEWARE_CLASSES = (
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+)
+
+
 # django heroku
 
-import django_heroku
-django_heroku.settings(locals())
+# import django_heroku
+# django_heroku.settings(locals())
 

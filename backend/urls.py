@@ -22,7 +22,7 @@ from django.views.decorators.cache import never_cache
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('base/', include(('backend.base.urls', 'base'), namespace='base')),
-    path('lexxer/', include('backend.apps.lexxer.urls')),
+    path('api/lexxer/', include('backend.apps.lexxer.urls')),
 ]
 
 
