@@ -52,9 +52,10 @@ class MythSyntax:
     def p_id(self, p):
         '''id : ID arrayChestQuestOption'''
 
+
     def p_arrayChestQuestOption(self, p):
         '''arrayChestQuestOption : arrayIndex chestArray
-                                 | questCall'''
+                                 | OPPAR questParamCall CLPAR'''
 
     def p_extraId(self, p):
         '''extraId : COMMA ID init extraId
@@ -239,8 +240,11 @@ class MythSyntax:
     def p_chest(self, p):
         '''chest : CHEST ID OPCOLUMN chestBody CLCOLUMN'''
 
+    def p_idWithoutQuest(self, p):
+        '''idWithoutQuest : ID arrayIndex chestArray'''
+
     def p_chestArray(self, p):
-        '''chestArray : DOT id chestArray
+        '''chestArray : DOT idWithoutQuest chestArray
                       | empty'''
 
     def p_chestBody(self, p):
@@ -402,9 +406,6 @@ class MythSyntax:
                               | BESTOW valueExpression SEMICOLON
                               | empty'''
 
-    def p_questCall(self, p):
-        '''questCall : OPPAR questParamCall CLPAR'''
-
     # QUEST
 
     # Statement
@@ -415,12 +416,12 @@ class MythSyntax:
                      | singleStatement body
                      | empty'''
 
+    # | questCall SEMICOLON
     def p_singleStatement(self, p):
         '''singleStatement : pandora
                            | declaration
                            | inputOutput
                            | assignExpression
-                           | questCall SEMICOLON
                            | valueExpression SEMICOLON
                            | SEMICOLON'''
 
