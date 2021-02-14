@@ -220,7 +220,7 @@ export default {
 
         const start_line = lines > 0 ? lines + 1 : 1;
 
-        const endpoint = "http://localhost:8000/lexxer/execute/";
+        const endpoint = `${process.env.VUE_APP_API}/api/lexxer/execute/`;
 
         const response = await this.axios.post(endpoint, {
           raw_data,

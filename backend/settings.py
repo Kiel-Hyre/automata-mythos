@@ -66,7 +66,7 @@ ROOT_URLCONF = 'backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'dist')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -194,24 +194,12 @@ if DEBUG:
 
 STATIC_URL = '/static/'
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'dist' ,'static')
-
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+STATIC_ROOT = os.path.join(BASE_DIR, 'dist', 'static')
 
 STATICFILES_DIRS = []
 
 
-# Frontend config
-# (no url)
-
-FRONTEND_CONFIG = [
-    (TEMPLATES[0]['DIRS'], os.path.join(BASE_DIR, 'dist')),
-    # (STATICFILES_DIRS, os.path.join(BASE_DIR, 'dist/static')),
-]
-
-for cfg, path in FRONTEND_CONFIG:
-    if os.path.exists(path):
-        cfg.append(path)
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 
 # Media root
@@ -236,8 +224,13 @@ REST_FRAMEWORK = {
 CORS_ORIGIN_ALLOW_ALL = True
 
 
+MIDDLEWARE_CLASSES = (
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+)
+
+
 # django heroku
 
-import django_heroku
-django_heroku.settings(locals())
+# import django_heroku
+# django_heroku.settings(locals())
 
