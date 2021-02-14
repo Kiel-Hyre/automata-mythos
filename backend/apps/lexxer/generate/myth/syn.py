@@ -1,6 +1,9 @@
 from django.forms import ValidationError
 from backend.apps.lexxer.generate.ply import yacc
-from .lex import MythLexer
+from .lex import (
+    RESERVED_WORDS_LIST,
+    MythLexer
+)
 
 
 class SyntaxValidationError(ValidationError):
@@ -19,6 +22,17 @@ class MythSyntax:
 
     def p_excess(self, p):
         '''excess : empty'''
+
+    def p_program_olympus_error(self, p):
+        '''program : global error OPCOLUMN body CLCOLUMN excess'''
+        self.append_error('OLYMPUS keyword is missing',
+            line=p.lineno(2),
+            char_line=p[2].char_line)
+
+    def p_program_excess_error(self, p):
+        '''program : global OLYMPUS OPCOLUMN body CLCOLUMN error'''
+        self.append_error('Unwanted characters after OLYMPUS block',
+            line=p.lineno(6), char_line=self.lexer.find_column_lex(p.lexpos(6)))
 
     def p_global(self, p):
         '''global : pandora global
@@ -42,7 +56,6 @@ class MythSyntax:
         '''arrayChestQuestOption : arrayIndex chestArray
                                  | questCall'''
 
-
     def p_extraId(self, p):
         '''extraId : COMMA ID init extraId
                    | empty'''
@@ -58,18 +71,38 @@ class MythSyntax:
                        | SILVER ID init extraId SEMICOLON
                        | ID ID init extraId SEMICOLON'''
 
+    # brute due to ID ID ambiguity, it detects the 2nd ID as 1st ID
+    # others dont need because once 1st ID it tries the RW
+    # note maybe bugging the statement
+    def p_declaration_ID_error(self, p):
+        '''declaration : ID error init extraId SEMICOLON'''
+        self.append_error(
+            'Improper declaration : Specify a type',
+            line=p.lineno(2),
+            char_line=self.lexer.find_column_lex(p.lexpos(2)-1))
+
+    def p_declaration_SEMICOLON(self, p):
+        '''declaration : SONG ID init extraId error
+                       | GOLD ID init extraId error
+                       | FATE ID init extraId error
+                       | SILVER ID init extraId error
+                       | ID ID init extraId error'''
+        self.append_error('Declaration missing terminator(;)',
+            line=p.lineno(5),
+            char_line=self.lexer.find_column_lex(p.lexpos(5)))
+
     def p_init(self, p):
         '''init : ASSIGN valueExpression
                 | OPBRACK valueExpression CLBRACK arrayIndex arrayContinue
                 | empty'''
 
 
+    # questCall
     def p_value(self, p):
         '''value : TEXT
                  | NUM
                  | BOOL
                  | NONE
-                 | questCall
                  | id'''
 
     def p_parameter(self, p):
@@ -79,7 +112,6 @@ class MythSyntax:
     def p_parameterContinue(self, p):
         '''parameterContinue : COMMA parameter
                              | empty'''
-
 
     # Array
 
@@ -110,8 +142,6 @@ class MythSyntax:
 
     # Array
 
-
-
     # Expression
 
     def p_expression(self, p):
@@ -120,7 +150,7 @@ class MythSyntax:
                       | logicalExpression
                       | empty'''
 
-
+    # ambiguity
     def p_valueExpression(self, p):
         '''valueExpression : OPPAR valueExpression CLPAR
                            | unaryOP valueExpression
@@ -129,6 +159,20 @@ class MythSyntax:
 
     def p_assignExpression(self, p):
         '''assignExpression : id assignOP valueExpression SEMICOLON'''
+
+    def p_assignExpression_semicolon_error(self, p):
+        '''assignExpression : id assignOP valueExpression error'''
+        self.append_error('Missing terminator(;)',
+            line=p.lineno(4),
+            char_line=self.lexer.find_column_lex(p.lexpos(4))
+        )
+
+    def p_assignExpression_valueExpression_error(self, p):
+        '''assignExpression : id assignOP error SEMICOLON'''
+        self.append_error('No value to assigned to',
+            line=p.lineno(3),
+            char_line=self.lexer.find_column_lex(p.lexpos(3))
+        )
 
     def p_assignOP(self, p):
         '''assignOP : ASSIGN
@@ -142,6 +186,11 @@ class MythSyntax:
     def p_arithmeticExpression(self, p):
         '''arithmeticExpression : arithmeticOP valueExpression'''
 
+    def p_arithmeticExpression_valueExpression_error(self, p):
+        '''arithmeticExpression : arithmeticOP error'''
+        self.append_error('Missing value in expression', line=p.lineno(2),
+            char_line=self.lexer.find_column_lex(p.lexpos(2)))
+
     def p_arithmeticOP(self, p):
         '''arithmeticOP : PLUS_OP
                         | MINUS_OP
@@ -153,12 +202,22 @@ class MythSyntax:
     def p_logicalExpression(self, p):
         '''logicalExpression : logicalOP valueExpression'''
 
+    def p_logicalExpression_valueExpression_error(self, p):
+        '''logicalExpression : logicalOP error'''
+        self.append_error('Missing value in expression', line=p.lineno(2),
+            char_line=self.lexer.find_column_lex(p.lexpos(2)))
+
     def p_logicalOP(self, p):
         '''logicalOP : AND_OP
                      | OR_OP'''
 
     def p_relationalExpression(self, p):
         '''relationalExpression : relationalOP valueExpression'''
+
+    def p_relationalExpression_valueExpression_error(self, p):
+        '''relationalExpression : relationalOP error'''
+        self.append_error('Missing value in expression', line=p.lineno(2),
+            char_line=self.lexer.find_column_lex(p.lexpos(2)))
 
     def p_relationalOP(self, p):
         '''relationalOP : EQ_OP
@@ -174,8 +233,6 @@ class MythSyntax:
                    | empty'''
 
     # Expression
-
-
 
     # Chest
 
@@ -346,10 +403,9 @@ class MythSyntax:
                               | empty'''
 
     def p_questCall(self, p):
-        '''questCall : ID OPPAR questParamCall CLPAR'''
+        '''questCall : OPPAR questParamCall CLPAR'''
 
     # QUEST
-
 
     # Statement
 
@@ -367,6 +423,12 @@ class MythSyntax:
                            | questCall SEMICOLON
                            | valueExpression SEMICOLON
                            | SEMICOLON'''
+
+    def p_singleStatement_valueExpression_error(self, p):
+        '''singleStatement : valueExpression error'''
+        self.append_error('Missing terminator(;)',
+            line=p.lineno(2),
+            char_line=self.lexer.find_column_lex(p.lexpos(2)))
 
     def p_conditionalStatement(self, p):
         '''conditionalStatement : trial
@@ -447,12 +509,16 @@ class MythSyntax:
     def p_error(self, p):
         # None EOF
         if p is None:
-            self.append_error(f"End Of File")
+            self.append_error(f"End Of File | Tip : put OLYMPUS block")
             return
 
+        message = f"Syntax error : "
+        if p.type not in RESERVED_WORDS_LIST: # Reserved words
+            message += " before "
         self.append_error(
-            message=f"Syntax error at {p.value!r}", line=p.lineno, char_line=p.char_line)
+            message=f"{message} {p.value!r}", line=p.lineno, char_line=p.char_line)
         # self.parser.errok() # disable to use p_name_error
+
 
     def __init__(self,lex_debug=False, debug=False):
         self.lexer = self.lexer(debug=lex_debug)
