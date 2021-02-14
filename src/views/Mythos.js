@@ -118,6 +118,7 @@ export default {
         styleActiveLine: true,
         scrollbarStyle: "overlay",
         lint: true,
+        dragDrop: false,
         extraKeys: {
           "Ctrl-S": function() {
             self.saveChanges();
@@ -183,6 +184,11 @@ export default {
       this.$refs.codemirror.codemirror.clearHistory();
     },
     newCode() {
+      const promptResponse = confirm(
+        "Are you sure you want to create new program?"
+      );
+
+      if (!promptResponse) return;
       this.$refs.codemirror.codemirror.setValue("");
       this.resetTables();
       this.filename = "Untitled";
