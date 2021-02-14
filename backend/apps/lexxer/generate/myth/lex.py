@@ -91,7 +91,6 @@ class MythLexer:
             'DIV_ASSIGN',
             'MOD_ASSIGN',
             'POW_ASSIGN',
-            'NL',
         ]
     )
 
@@ -328,7 +327,7 @@ class MythLexer:
         return t
 
     def t_TEXT(self, t):
-        r'\"(?:[^\n\r\\]|\\.)*?\"' 
+        r'\"(?:[^\n\r\\]|\\.)*?\"'
         t.type = 'TEXT'
         t.char_line = self.find_column(t)
         t.description = 'text-literal'
@@ -374,25 +373,26 @@ class MythLexer:
         # save data and clear at first
         self.data = data
         self.baseline = baseline
+        self.lexer.lineno = self.baseline
         self.ERROR_LIST = []
         self.TOKEN_LIST = []
         if run: self.test()
 
-    def test(self):
-        self.lexer.lineno = self.baseline
+    def test(self, debug=False):
         self.lexer.input(self.data)
         while True:
-             tok = self.lexer.token()
-             if not tok:
-                 break
-             #print(tok)
-             self.TOKEN_LIST.append(tok)
+            tok = self.lexer.token()
+            if not tok:
+                break
+
+            if debug: print(tok)
+            self.TOKEN_LIST.append(tok)
 
 
 # mini class
 def parse(string="", baseline=1):
     mythLex = MythLexer()
-    mythLex.input(string, run=True)
+    mythLex.input(string, baseline,run=True)
     if mythLex.ERROR_LIST: raise LexicalValidationError(mythLex.ERROR_LIST)
     return mythLex.TOKEN_LIST
 

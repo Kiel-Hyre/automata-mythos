@@ -15,7 +15,10 @@ class MythSyntax:
     start = 'program'
 
     def p_program(self, p):
-        '''program : global OLYMPUS OPCOLUMN body CLCOLUMN'''
+        '''program : global OLYMPUS OPCOLUMN body CLCOLUMN excess'''
+
+    def p_excess(self, p):
+        '''excess : empty'''
 
     def p_global(self, p):
         '''global : pandora global
@@ -381,7 +384,7 @@ class MythSyntax:
     def p_inputOutput(self, p):
         '''inputOutput : OFFER OPPAR id CLPAR SEMICOLON
                        | ECHO OPPAR output CLPAR SEMICOLON'''
-        
+
     def p_trial(self, p):
         '''trial : TRIAL OPPAR valueExpression CLPAR OPCOLUMN statement CLCOLUMN nextTrial endTrial'''
 
@@ -444,30 +447,38 @@ class MythSyntax:
     def p_error(self, p):
         # None EOF
         if p is None:
-            self.append_error(f"End Of File : Tip! Put a main block: OLYMPUS")
+            self.append_error(f"End Of File")
             return
-        else: self.append_error(
+
+        self.append_error(
             message=f"Syntax error at {p.value!r}", line=p.lineno, char_line=p.char_line)
-        # self.parser.errok() # ?? disable if want only one instance of this RECOVERY MODE
+        # self.parser.errok() # disable to use p_name_error
 
     def __init__(self,lex_debug=False, debug=False):
         self.lexer = self.lexer(debug=lex_debug)
         self.parser = yacc.yacc(start=self.start, module=self, debug=debug)
         self.ERROR_LIST = []
+        self.found_MAIN = False
 
     def append_error(self, message="", code="syntax", params="", line=0, char_line=0):
         self.ERROR_LIST.append(SyntaxValidationError(message, code, params, line, char_line))
 
-    def test(self, data, baseline=1):
+    def test(self, data, baseline=1, run_lexical=False):
+        self.ERROR_LIST = []
         self.lexer.input(data, baseline)
+
         result = self.parser.parse(data, lexer=self.lexer.lexer, tracking=True)
-        if self.ERROR_LIST: raise SyntaxValidationError(self.ERROR_LIST)
+        if run_lexical: self.lexer.test()
         return result
 
-def parse(data="", baseline=1):
+def parse(data="", baseline=1, run_lexical=False):
     syntax = MythSyntax(lex_debug=True, debug=True)
-    syntax.test(data, baseline)
-    return True
+    syntax.test(data, baseline, run_lexical)
+
+    if run_lexical:
+        if syntax.lexer.ERROR_LIST: syntax.ERROR_LIST.extend(syntax.lexer.ERROR_LIST)
+    if syntax.ERROR_LIST: raise SyntaxValidationError(syntax.ERROR_LIST)
+    return syntax.lexer.TOKEN_LIST, True
 
 
 
