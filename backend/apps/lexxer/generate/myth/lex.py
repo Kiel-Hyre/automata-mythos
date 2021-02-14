@@ -397,8 +397,8 @@ class MythLexer:
 
 
 # mini class
+mythLex = MythLexer()
 def parse(string="", baseline=1):
-    mythLex = MythLexer()
     mythLex.input(string, baseline,run=True)
     if mythLex.ERROR_LIST: raise LexicalValidationError(mythLex.ERROR_LIST)
     return mythLex.TOKEN_LIST
