@@ -38,6 +38,8 @@ reserved_words = {
     "VERDICT": 'VERDICT'
 }
 
+RESERVED_WORDS_LIST = list(reserved_words.values())
+
 
 class LexicalValidationError(ValidationError):
 
@@ -53,7 +55,8 @@ class MythLexer:
         'TEXT', # NO LIMIT YET
         'ID',
         'BOOL',
-    ] +  list(reserved_words.values())
+    ]
+    tokens.extend(RESERVED_WORDS_LIST)
     tokens.extend(
         [ # groupings
             'OPCOLUMN',
@@ -359,6 +362,10 @@ class MythLexer:
     def find_column(self, token):
         line_start = self.data.rfind('\n', 0, token.lexpos) + 1
         return (token.lexpos - line_start) + 1
+
+    def find_column_lex(self, lexpos):
+        line_start = self.data.rfind('\n', 0, lexpos) + 1
+        return (lexpos - line_start) + 1
 
     def append_error(self, message=" ", code="lexical", line=0, char_line=0):
 
