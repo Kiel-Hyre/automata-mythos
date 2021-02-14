@@ -145,7 +145,7 @@
             </v-sheet>
           </div>
         </v-col>
-        <v-col v-if="showLexical" cols="12" md="5">
+        <v-col cols="12" md="5">
           <v-simple-table height="420">
             <template #default>
               <thead>
