@@ -18,16 +18,7 @@ from .generate.myth.syn import parse as syn_parse
 class LexxerExecuteView(APIView):
     class InputSerializer(serializers.Serializer):
         raw_data = serializers.CharField(required=False)
-        start_line = serializers.IntegerField(initial=1, required=False)
-
-        # def validate_raw_data(self, data):
-        #     try:
-        #         data = json.loads(data)
-        #         if type(data) not in [list]:
-        #             raise serializers.ValidationError('Failed to load')
-        #         return data
-        #     except:
-        #         raise serializers.ValidationError('Failed to load')
+        start_line = serializers.IntegerField(required=False)
 
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
@@ -53,17 +44,10 @@ class LexxerExecuteView(APIView):
         response = {'success': False, 'errors':[], 'data': None}
         if serializer.is_valid():
             data = serializer.validated_data
-            # lexes = Lexxer(data.get('raw_data', []))
-            # data['lex_data'] = lexes.list_val_to_dict_token
-            try: data['lex_data'] = lex_parse(
-                data.get('raw_data', ''), data.get('start_line', 1))
-            except Exception as e:
-                if hasattr(e, 'error_list'):
-                    response['errors'] = self.ErrorSerializer(e.error_list,
-                        many=True).data
-                else: raise Exception(e)
-            try: data['syn_data'] = syn_parse(
-                data.get('raw_data',''), data.get('start_line', 1)) # bool
+            print(data)
+            try:
+                lexical, syntax = syn_parse(
+                data.get('raw_data',''), data.get('start_line', 1), True)
             except Exception as e:
                 if hasattr(e, 'error_list'):
                     response['errors'].extend(self.ErrorSerializer(e.error_list,
@@ -73,9 +57,9 @@ class LexxerExecuteView(APIView):
             if not response['errors']:
                 response['success'] = True
                 response['data'] ={
-                    'lexical': self.LexOutputSerializer(data['lex_data'],
+                    'lexical': self.LexOutputSerializer(lexical,
                         many=True).data,
-                    'syntax': data['syn_data']
+                    'syntax': syntax
                 }
         else:
             response['errors'] = serializer.errors
