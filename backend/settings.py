@@ -126,39 +126,6 @@ USE_L10N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/3.0/howto/static-files/
-
-STATIC_URL = '/static/'
-
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-
-STATICFILES_DIRS = []
-
-
-# Frontend config
-# (no url)
-
-FRONTEND_CONFIG = [
-    (TEMPLATES[0]['DIRS'], os.path.join(BASE_DIR, 'dist')),
-    (STATICFILES_DIRS, os.path.join(BASE_DIR, 'dist/static')),
-]
-
-for cfg, path in FRONTEND_CONFIG:
-    if os.path.exists(path):
-        cfg.append(path)
-
-
-# Media root
-# https://docs.djangoproject.com/en/3.0/ref/settings/#media-root
-
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-MEDIA_URL = '/media/'
-
-
 # Logging
 # https://docs.python.org/3/library/logging.html
 
@@ -219,6 +186,40 @@ if DEBUG:
             },
         },
     }
+
+
+
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/3.0/howto/static-files/
+
+STATIC_URL = '/static/'
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'dist' ,'static')
+
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+STATICFILES_DIRS = []
+
+
+# Frontend config
+# (no url)
+
+FRONTEND_CONFIG = [
+    (TEMPLATES[0]['DIRS'], os.path.join(BASE_DIR, 'dist')),
+    # (STATICFILES_DIRS, os.path.join(BASE_DIR, 'dist/static')),
+]
+
+for cfg, path in FRONTEND_CONFIG:
+    if os.path.exists(path):
+        cfg.append(path)
+
+
+# Media root
+# https://docs.djangoproject.com/en/3.0/ref/settings/#media-root
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+MEDIA_URL = '/media/'
 
 
 # Django REST Framework

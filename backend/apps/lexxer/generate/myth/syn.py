@@ -506,7 +506,7 @@ class MythSyntax:
 
     def p_empty(self, p):
         'empty :'
-        print('Empty')
+        # print('Empty')
         pass
 
     def p_error(self, p):
