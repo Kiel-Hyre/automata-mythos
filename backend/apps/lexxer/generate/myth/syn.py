@@ -44,12 +44,13 @@ class MythSyntax:
                   | SEMICOLON global
                   | empty'''
 
-    # ID
+
     def p_dataType(self, p):
         '''dataType : SONG
                     | GOLD
                     | SILVER
-                    | FATE'''
+                    | FATE
+                    | ID'''
 
     def p_id(self, p):
         '''id : ID arrayChestQuestOption'''
