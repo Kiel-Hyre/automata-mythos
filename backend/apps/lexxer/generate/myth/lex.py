@@ -320,7 +320,7 @@ class MythLexer:
         return t
 
     def t_NUM(self, t):
-        r'\d+\.?\d+'
+        r'\d+(\.\d+)?'
         t.type = 'NUM'
         t.char_line = self.find_column(t)
         t.description = 'num-literal'
@@ -338,7 +338,7 @@ class MythLexer:
         return t
 
     def t_ID(self, t):
-        r'[_a-zA-Z][_a-zA-Z0-9]*'
+        r'[_a-zA-Z][_a-zA-Z0-9]{0,31}'
         t.type = reserved_words.get(t.value, 'ID')
         t.char_line = self.find_column(t)
         if t.value in ['BLESSED', 'CURSED']:
