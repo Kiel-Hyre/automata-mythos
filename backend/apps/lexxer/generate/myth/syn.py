@@ -251,13 +251,18 @@ class MythSyntax:
                       | empty'''
 
     def p_chestBody(self, p):
-        '''chestBody : pandora chestBody
+        '''chestBody : semiColonLoop
+                     | pandora chestBody
                      | declaration chestBody
                      | empty'''
 
     # Chest
 
     # Reserved Words
+
+    def p_semiColonLoop(self, p):
+        '''semiColonLoop : SEMICOLON semiColonLoop
+                         | empty'''
 
     def p_pandora(self, p):
         '''pandora : PANDORA declaration'''
@@ -347,7 +352,7 @@ class MythSyntax:
         '''questHydra : HYDRA OPPAR id CLPAR OPCOLUMN questCases CLCOLUMN'''
 
     def p_questCases(self, p):
-        '''questCases : questHead questSlain
+        '''questCases : semiColonLoop questHead questSlain semiColonLoop
                       | empty'''
 
     def p_questHead(self, p):
@@ -390,7 +395,7 @@ class MythSyntax:
         '''questForHydra : HYDRA OPPAR id CLPAR OPCOLUMN questForCases CLCOLUMN'''
 
     def p_questForCases(self, p):
-        '''questForCases : questForHead questForSlain
+        '''questForCases : semiColonLoop questForHead questForSlain semiColonLoop
                          | empty'''
 
     def p_questForHead(self, p):
@@ -465,7 +470,7 @@ class MythSyntax:
         '''hydra : HYDRA OPPAR id CLPAR OPCOLUMN cases CLCOLUMN'''
 
     def p_cases(self, p):
-        '''cases : head slain
+        '''cases : semiColonLoop head slain semiColonLoop
                  | empty'''
 
     def p_loopBody(self, p):
@@ -494,7 +499,7 @@ class MythSyntax:
         '''loopHydra : HYDRA OPPAR id CLPAR OPCOLUMN loopCases CLCOLUMN'''
 
     def p_loopCases(self, p):
-        '''loopCases : loopHead loopSlain
+        '''loopCases : semiColonLoop loopHead loopSlain semiColonLoop
                      | empty'''
 
     def p_loopHead(self, p):
