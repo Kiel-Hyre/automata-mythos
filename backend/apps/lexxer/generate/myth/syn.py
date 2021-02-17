@@ -464,7 +464,8 @@ class MythSyntax:
                      | empty'''
 
     def p_endTrial(self, p):
-        '''endTrial : VERDICT OPCOLUMN statement CLCOLUMN'''
+        '''endTrial : VERDICT OPCOLUMN statement CLCOLUMN
+                    | empty'''
 
     def p_hydra(self, p):
         '''hydra : HYDRA OPPAR id CLPAR OPCOLUMN cases CLCOLUMN'''
