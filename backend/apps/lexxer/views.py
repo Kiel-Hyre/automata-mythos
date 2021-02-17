@@ -55,6 +55,9 @@ class LexxerExecuteView(APIView):
                     many=True).data)
                 else: raise Exception(e)
 
+            if response['errors']:
+                return Response(response, status=status.HTTP_200_OK)
+
             try:
                 syntax = syn_parse(data.get('raw_data',''), data.get('start_line', 1))
             except Exception as e:
@@ -62,6 +65,9 @@ class LexxerExecuteView(APIView):
                     response['errors'].extend(self.ErrorSerializer(
                         e.error_list, many=True).data)
                 else: raise Exception(e)
+
+            if response['errors']:
+                return Response(response, status=status.HTTP_200_OK)
 
             if not response['errors']:
                 response['success'] = True
