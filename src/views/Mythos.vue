@@ -164,7 +164,7 @@
                   @click="showErrorLine(item.lineno, item.char_line)"
                   v-for="item in lexicalData"
                   :key="item.name"
-                  class=" no-select"
+
                 >
                   <td v-for="header in lexicalTableHeaders" :key="header.value">
                     <span
@@ -240,7 +240,7 @@
                   @click="showErrorLine(item.line, item.char_line)"
                   v-for="item in errors"
                   :key="item.name"
-                  class="no-select"
+
                 >
                   <td
                     v-for="header in analyzerTableHeaders"
@@ -267,7 +267,7 @@
               </tbody>
 
               <tbody v-else>
-                <tr class="no-select" v-if="executedOnce">
+                <tr  v-if="executedOnce">
                   <td class="text-body-1 text--center">
                     <v-icon
                       v-text="'fa-check-circle'"
