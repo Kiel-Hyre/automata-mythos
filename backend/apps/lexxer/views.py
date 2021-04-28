@@ -46,36 +46,47 @@ class LexxerExecuteView(APIView):
             data = serializer.validated_data
             # print(data)
 
-            try:
-                lexical = lex_parse(
-                    data.get('raw_data',''), data.get('start_line', 1))
-            except Exception as e:
-                if hasattr(e, 'error_list'):
-                    response['errors'].extend(self.ErrorSerializer(e.error_list,
-                    many=True).data)
-                else: raise Exception(e)
+            lexical, syntax = [], False
 
-            if response['errors']:
-                return Response(response, status=status.HTTP_200_OK)
+            # try:
+            #     lexical = lex_parse(
+            #         data.get('raw_data',''), data.get('start_line', 1))
+            # except Exception as e:
+            #     if hasattr(e, 'error_list'):
+            #         response['errors'].extend(self.ErrorSerializer(e.error_list,
+            #         many=True).data)
+            #     else: raise Exception(e)
 
-            try:
-                syntax = syn_parse(data.get('raw_data',''), data.get('start_line', 1))
-            except Exception as e:
-                if hasattr(e, 'error_list'):
-                    response['errors'].extend(self.ErrorSerializer(
-                        e.error_list, many=True).data)
-                else: raise Exception(e)
 
-            if response['errors']:
-                return Response(response, status=status.HTTP_200_OK)
+            lexical_dict = lex_parse(
+                    data.get('raw_data', ''), data.get('start_line', 1))
 
-            if not response['errors']:
-                response['success'] = True
-                response['data'] ={
-                    'lexical': self.LexOutputSerializer(lexical,
-                        many=True).data,
-                    'syntax': syntax
-                }
+            if lexical_dict['errors']: response['errors'].extend(
+                self.ErrorSerializer(lexical_dict['errors'], many=True).data)
+
+            # try:
+            #     syntax = syn_parse(data.get('raw_data',''), data.get('start_line', 1))
+            # except Exception as e:
+            #     if hasattr(e, 'error_list'):
+            #         response['errors'].extend(self.ErrorSerializer(
+            #             e.error_list, many=True).data)
+            #     else: raise Exception(e)
+
+            syn_lex_token, syn_bool, syn_errors = syn_parse(data.get('raw_data',''),
+                    data.get('start_line', 1))
+
+            if syn_errors: response['errors'].extend(
+                self.ErrorSerializer(syn_errors, many=True).data)
+
+            # if response['errors']:
+            #     return Response(response, status=status.HTTP_200_OK)
+
+            if not response['errors']: response['success'] = True
+            response['data'] ={
+                'lexical': self.LexOutputSerializer(lexical_dict['data'],
+                    many=True).data,
+                'syntax': syn_bool
+            }
         else:
             response['errors'] = serializer.errors
         return Response(response, status=status.HTTP_200_OK)
