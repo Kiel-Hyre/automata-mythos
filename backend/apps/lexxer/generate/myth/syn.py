@@ -156,10 +156,11 @@ class MythSyntax:
 
     # ambiguity
     def p_valueExpression(self, p):
-        '''valueExpression : OPPAR valueExpression CLPAR
+        '''valueExpression : OPPAR valueExpression CLPAR expression
                            | unaryOP valueExpression
                            | unaryOP value expression
                            | value expression'''
+
 
     def p_assignExpression(self, p):
         '''assignExpression : id assignOP valueExpression SEMICOLON'''
@@ -557,9 +558,8 @@ else:syntax = MythSyntax()
 def parse(data="", baseline=1):
 
     syntax.test(data, baseline)
-
-    if syntax.ERROR_LIST: raise SyntaxValidationError(syntax.ERROR_LIST)
-    return syntax.lexer.TOKEN_LIST, True
+    # if syntax.ERROR_LIST: raise SyntaxValidationError(syntax.ERROR_LIST)
+    return syntax.lexer.TOKEN_LIST, True, syntax.ERROR_LIST
 
 
 
