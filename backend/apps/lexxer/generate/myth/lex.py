@@ -394,6 +394,7 @@ class MythLexer:
                 break
 
             if debug: print(tok)
+            if self.ERROR_LIST: break
             self.TOKEN_LIST.append(tok)
 
 
@@ -401,6 +402,11 @@ class MythLexer:
 mythLex = MythLexer()
 def parse(string="", baseline=1):
     mythLex.input(string, baseline,run=True)
-    if mythLex.ERROR_LIST: raise LexicalValidationError(mythLex.ERROR_LIST)
-    return mythLex.TOKEN_LIST
+
+    # if mythLex.ERROR_LIST: raise LexicalValidationError(mythLex.ERROR_LIST)
+    return {
+        'data': mythLex.TOKEN_LIST,
+        'errors': mythLex.ERROR_LIST
+    }
+    # return mythLex.TOKEN_LIST
 

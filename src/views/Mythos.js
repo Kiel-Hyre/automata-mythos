@@ -262,13 +262,14 @@ export default {
 
         this.loading = false;
 
-        if (success) {
+        console.log(response.data);
+        //if (success) {
           this.lexicalData = [...data["lexical"]];
-          this.errors = [];
-        } else {
-          this.lexicalData = [];
+        //  this.errors = [];
+        //} else {
+        //  this.lexicalData = [];
           this.errors = [...errors];
-        }
+        //}
 
         if (!this.executedOnce) this.executedOnce = true;
       }, 500);
